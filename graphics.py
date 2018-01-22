@@ -18,7 +18,7 @@ class text_box():
 
     def _is_in(self):
         x_mouse, y_mouse = pygame.mouse.get_pos()
-        return self.x<x_mouse<self.x+self.width and self.y<y_mouse<self.y+self.height
+        return self.x < x_mouse < self.x+self.width and self.y < y_mouse < self.y+self.height
 
 
     def update_press(self):
@@ -29,11 +29,14 @@ class text_box():
             else:
                 self.activated = False
 
-    def update(self, events):
+    def update(self, events, hide=False):
         self.update_press()
 
         if self.activated:
-            self.textinput.update(events)
+            if self.textinput.get_surface().get_width() >= self.width - 15:
+                self.textinput.update(events, True)
+            else:
+                self.textinput.update(events)
             self.screen.blit(self.textinput.get_surface(), (self.x+4, self.y+11))
         else:
             font = pygame.font.SysFont('', self.size)
@@ -59,10 +62,10 @@ class button():
         return self.x<x_mouse<self.x+self.width and self.y<y_mouse<self.y+self.height
 
 
-    def is_pressed(self):
-        pressed1, pressed2, pressed3 = pygame.mouse.get_pressed()
-        if pressed1 and self._is_in():
-            return True
+    def is_pressed(self, events):
+        for event in events:
+            if event.type == pygame.MOUSEBUTTONDOWN and self._is_in():
+                return True
         return False
 
 class image_button(button):

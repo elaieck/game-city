@@ -8,6 +8,7 @@ pygame.init()
 screen = pygame.display.set_mode((750, 538))
 clock = pygame.time.Clock()
 
+
 # sock = socket.socket()
 # ip = "127.0.0.1"    # means local
 # port = 60000
@@ -41,8 +42,13 @@ while True:
         login_username_box.update(events)
         login_password_box.update(events)
 
-        if create_account_button.is_pressed():
+        if create_account_button.is_pressed(events):
             current_screen = "signup"
+
+        font = pygame.font.SysFont('arial', 30)
+        text = font.render(str(login_username_box.textinput.get_surface().get_width()), True, (0, 0, 0))
+        pygame.draw.rect(screen, (255, 255, 255), (0, 0, 150, 50))
+        screen.blit(text, (2, 2))
 
         pygame.display.flip()
 
@@ -57,7 +63,7 @@ while True:
         signup_password_box.update(events)
         signup_confirm_box.update(events)
 
-        if sign_up_button.is_pressed():
+        if sign_up_button.is_pressed(events):
             current_screen = "login"
 
         pygame.display.flip()
