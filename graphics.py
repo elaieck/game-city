@@ -18,7 +18,7 @@ class text_box():
 
     def _is_in(self):
         x_mouse, y_mouse = pygame.mouse.get_pos()
-        return self.x < x_mouse < self.x+self.width and self.y < y_mouse < self.y+self.height
+        return self.x <= x_mouse <= self.x+self.width and self.y <= y_mouse <= self.y+self.height
 
 
     def update_press(self):
@@ -46,14 +46,17 @@ class text_box():
                 text = font.render(self.textinput.get_text(), True, (0, 0, 0))
             self.screen.blit(text, (self.x+4, self.y+11))
 
+    def get_text(self):
+        return self.textinput.get_text()
+
 class button():
 
-    def __init__(self, x , y, width, height, text=""):
+    def __init__(self, x , y, width, height, description=""):
         self.x = x
         self.y = y
         self.width = width
         self.height = height
-        self.text = text
+        self.description = description
         self.surface = pygame.Surface((1, 1))
         self.surface.set_alpha(0)
 
@@ -69,23 +72,42 @@ class button():
         return False
 
 class image_button(button):
-    def __init__(self,screen, x, y, image):
+    def __init__(self, screen, x, y, image, description):
         self.image = pygame.image.load(image)
-        button.__init__(self, x, y, self.image.get_width, self.image.get_height)
-        self.surface = pygame.Surface((1, 1))
-        self.surface.set_alpha(0)
+        button.__init__(self, x, y, self.image.get_width, self.image.get_height, description)
         self.screen = screen
 
     def show(self):
         self.screen.blit(self.image, (self.x, self.y))
 
+class dialog_box():
+    def __init__(self, screen, x, y, text):
+        self.screen = screen
+        self.x = x
+        self.y = y
+        self.text = text
+        self.box = pygame.image.load("images\dialog.jpg")
+        self.ok_button = button(x+100, y+201, 108, 229)
+        self.activated = False
+
+    def update(self, events):
+        if self.activated:
+            self.screen.blit(self.box, (self.x, self.y))
+            pressed = self.ok_button.is_pressed(events)
+            # events = pygame.event.clear()
+            if pressed:
+                self.activated = False
+
+    def activate(self):
+        self.activated = True
 
 
 
-
-
-
-
+def screen_print(screen, x):
+    font = pygame.font.SysFont('arial', 30)
+    text = font.render(str(x), True, (0, 0, 0))
+    pygame.draw.rect(screen, (255, 255, 255), (0, 0, 150, 50))
+    screen.blit(text, (2, 2))
 
 
 
@@ -115,6 +137,8 @@ def main():
         text = font.render(str(pos), True, (0, 0, 0))
         pygame.draw.rect(screen, (255, 255, 255), (0, 0, 150, 50))
         screen.blit(text, (2, 2))
+
+        h = dialog_box(screen, 200, 175, "dfsgf")
 
         username_box.update(events)
         password_box.update(events)
