@@ -1,7 +1,8 @@
 import pygame
 import pygame_textinput
 
-class text_box():
+
+class TextBox():
 
     def __init__(self, screen, x , y, width, height, text="", size=30):
         self.screen = screen
@@ -19,7 +20,6 @@ class text_box():
     def _is_in(self):
         x_mouse, y_mouse = pygame.mouse.get_pos()
         return self.x <= x_mouse <= self.x+self.width and self.y <= y_mouse <= self.y+self.height
-
 
     def update_press(self):
         pressed1, pressed2, pressed3 = pygame.mouse.get_pressed()
@@ -49,7 +49,8 @@ class text_box():
     def get_text(self):
         return self.textinput.get_text()
 
-class button():
+
+class Button():
 
     def __init__(self, x , y, width, height, description=""):
         self.x = x
@@ -62,7 +63,10 @@ class button():
 
     def _is_in(self):
         x_mouse, y_mouse = pygame.mouse.get_pos()
-        return self.x<x_mouse<self.x+self.width and self.y<y_mouse<self.y+self.height
+        print self.x
+        print self.width
+        print"-------------"
+        return self.x<x_mouse<int(self.x+self.width) and self.y<y_mouse<int(self.y+self.height)
 
 
     def is_pressed(self, events):
@@ -71,28 +75,33 @@ class button():
                 return True
         return False
 
-class image_button(button):
+
+class ImageButton(Button):
     def __init__(self, screen, x, y, image, description):
         self.image = pygame.image.load(image)
-        button.__init__(self, x, y, self.image.get_width, self.image.get_height, description)
+        Button.__init__(self, x, y, self.image.get_width(), self.image.get_height(), description)
         self.screen = screen
 
     def show(self):
         self.screen.blit(self.image, (self.x, self.y))
 
-class dialog_box():
+
+class DialogBox():
     def __init__(self, screen, x, y, text):
         self.screen = screen
         self.x = x
         self.y = y
         self.text = text
         self.box = pygame.image.load("images\dialog.jpg")
-        self.ok_button = button(x+100, y+201, 108, 229)
+        self.ok_button = Button(x+120, y+238, 120, 36)
         self.activated = False
 
     def update(self, events):
         if self.activated:
             self.screen.blit(self.box, (self.x, self.y))
+            font = pygame.font.SysFont('', 30)
+            text = font.render(self.text, True, (120, 221, 213))
+            self.screen.blit(text, (self.x+35, self.y+40))
             pressed = self.ok_button.is_pressed(events)
             # events = pygame.event.clear()
             if pressed:
@@ -100,6 +109,43 @@ class dialog_box():
 
     def activate(self):
         self.activated = True
+
+
+"""
+game page:
+colors: light purple: (146,144,244)
+        black purple: (17,22,78)
+        glowy greenish: (137,255,223)
+"""
+
+
+class ScrollBox():
+
+    def __init__(self, screen, x, y, width, height, surfaces=[]):
+        self.screen = screen
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
+        self.surfaces = surfaces
+        self.scroll_pos = 0
+        self.space = 15
+
+    def show(self):
+        sur_x = self.space
+        sur_y = self.space
+        for surface in self.surfaces:
+            self.screen.blit(surface, (sur_x, sur_y - self.scroll_pos))
+            sur_y += surface.get_height() + self.height
+
+    def scroll(self, events):
+        scroller = Button(self.x+self.width, self.y, 5, self.height)
+
+        if scroller.is_pressed():
+            self.scroll_pos = pygame.mouse.get_pos()[1] - self.y
+
+
+
 
 
 
@@ -118,8 +164,8 @@ def main():
     screen = pygame.display.set_mode((750, 538))
     clock = pygame.time.Clock()
 
-    username_box = text_box(screen, 200, 175, 350, 40, "username")
-    password_box = text_box(screen, 200, 241, 350, 40, "password")
+    username_box = TextBox(screen, 200, 175, 350, 40, "username")
+    password_box = TextBox(screen, 200, 241, 350, 40, "password")
 
     while True:
         screen.fill((225, 225, 225))
@@ -138,7 +184,7 @@ def main():
         pygame.draw.rect(screen, (255, 255, 255), (0, 0, 150, 50))
         screen.blit(text, (2, 2))
 
-        h = dialog_box(screen, 200, 175, "dfsgf")
+        h = DialogBox(screen, 200, 175, "dfsgf")
 
         username_box.update(events)
         password_box.update(events)

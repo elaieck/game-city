@@ -45,7 +45,9 @@ def get_authen(sock):
 
 def recv_choice(sock):
     game_id = parts(sock.recv(1024))[1]
-    game = db.get_game(game_id)
+    return db.get_game(game_id)
+
+def send_game_info(sock, game):
     sock.send("GINFO~" + game.name + "~" + game.price)
     posts = db.get_game_posts(game)
     str_posts = json.dumps(posts)
@@ -57,9 +59,9 @@ def server(sock):
         username = get_authen(sock)
         if username is not "":
             break
-    game = recv_choice()
-    # send_game_info(game)
-    # send_posts(game)
+    game = recv_choice(sock)
+    send_game_info(sock, game)
+
     # while True:
     #     data = sock.recv(1024)
 
