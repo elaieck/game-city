@@ -58,14 +58,10 @@ class Button():
         self.width = width
         self.height = height
         self.description = description
-        self.surface = pygame.Surface((1, 1))
         self.surface.set_alpha(0)
 
     def _is_in(self):
         x_mouse, y_mouse = pygame.mouse.get_pos()
-        print self.x
-        print self.width
-        print"-------------"
         return self.x<x_mouse<int(self.x+self.width) and self.y<y_mouse<int(self.y+self.height)
 
 
@@ -93,7 +89,7 @@ class DialogBox():
         self.y = y
         self.text = text
         self.box = pygame.image.load("images\dialog.jpg")
-        self.ok_button = Button(x+120, y+238, 120, 36)
+        self.ok_button = Button(x+99, y+200, 120, 36)
         self.activated = False
 
     def update(self, events):
@@ -107,8 +103,20 @@ class DialogBox():
             if pressed:
                 self.activated = False
 
-    def activate(self):
-        self.activated = True
+    def activate(self,events):
+        while True:
+            events = pygame.event.get()
+            for event in events:
+                if event.type == pygame.QUIT:
+                    exit()
+            self.screen.blit(self.box, (self.x, self.y))
+            font = pygame.font.SysFont('', 24)
+            text = font.render(self.text, True, (120, 221, 213))
+            self.screen.blit(text, (self.x+35, self.y+40))
+            if self.ok_button.is_pressed(events):
+                break
+            pygame.display.flip()
+
 
 
 """

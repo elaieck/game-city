@@ -53,7 +53,7 @@ while True:
         screen.blit(login_background, (0, 0))
         login_username_box.update(events)
         login_password_box.update(events)
-        login_error_box.update(events)
+        # login_error_box.update(events)
 
         if create_account_button.is_pressed(events):
             current_screen = "signup"
@@ -68,7 +68,7 @@ while True:
                 current_screen = "menu"
             else:
                 print "FAILED LOGIN :("
-                login_error_box.activate()
+                login_error_box.activate(events)
 
         pygame.display.flip()
 
