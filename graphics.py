@@ -148,30 +148,30 @@ class ScrollBox():
             self.scroll_pos = pygame.mouse.get_pos()[1] - self.y
 
 
-class ScrollBox():
-
-    def __init__(self, screen, x, y, width, height, surfaces=[]):
-        self.screen = screen
-        self.x = x
-        self.y = y
-        self.width = width
-        self.height = height
-        self.surfaces = surfaces
-        self.scroll_pos = 0
-        self.space = 15
-        self.scroller = DrawButton(self.screen, self.x+self.width, self.y, 50, self.height, (255,255,255))
-
-    def show(self, events):
-        pygame.draw.rect(self.screen, (255, 255, 0), (self.x, self.y, self.width, self.height))
-        sur_x = self.x + self.space
-        sur_y = self.y + self.space
-        for surface in self.surfaces:
-            self.screen.blit(surface, (sur_x, sur_y - self.scroll_pos))
-            sur_y += surface.get_height() + self.space
-
-        self.scroller.show()
-        if self.scroller.is_in() and pygame.mouse.get_pressed()[0]:
-            self.scroll_pos = pygame.mouse.get_pos()[1] - self.y
+# class ScrollBox():
+#
+#     def __init__(self, screen, x, y, width, height, surfaces=[]):
+#         self.screen = screen
+#         self.x = x
+#         self.y = y
+#         self.width = width
+#         self.height = height
+#         self.surfaces = surfaces
+#         self.scroll_pos = 0
+#         self.space = 15
+#         self.scroller = DrawButton(self.screen, self.x+self.width, self.y, 50, self.height, (255,255,255))
+#
+#     def show(self, events):
+#         pygame.draw.rect(self.screen, (255, 255, 0), (self.x, self.y, self.width, self.height))
+#         sur_x = self.x + self.space
+#         sur_y = self.y + self.space
+#         for surface in self.surfaces:
+#             self.screen.blit(surface, (sur_x, sur_y - self.scroll_pos))
+#             sur_y += surface.get_height() + self.space
+#
+#         self.scroller.show()
+#         if self.scroller.is_in() and pygame.mouse.get_pressed()[0]:
+#             self.scroll_pos = pygame.mouse.get_pos()[1] - self.y
 
 
 """
@@ -192,15 +192,26 @@ class Post():
         self.text = text
         self.frame_color = (146, 144, 244)
         self.color = (17, 22, 78)
-        self.friend_button = DrawButton(self.screen, self.x+self.width-30-155, self.y+25, 155, 49)
+        self.friend_button = DrawButton(self.screen, self.x+self.width-30-155, self.y+25, 155, 49,(17,22,78))
 
-    def get_lined_string(self, width):
+    def get_lined_string(self):
         font = pygame.font.SysFont('', 30)
-        for index in range(self.text):
+        for index in range(len(self.text)):
             widths = [x[4] for x in font.metrics(self.text)]
-            if sum(widths[:index]) / width > 0:
+            if sum(widths[:index]) / self.width > 0:
                 new_text = self.text[:index]+"\n"+self.text[index:]
                 break
+        self.text = new_text
+
+    def r(self,string, limit, p):
+        font = pygame.font.SysFont('', 30)
+        widths = [x[4] for x in font.metrics(string)]
+        length = sum(widths)
+        if length - p < limit:
+            return string
+        else:
+            return self.r(string[1])
+
 
 
 
@@ -227,7 +238,11 @@ def main():
 
     # username_box = TextBox(screen, 200, 175, 350, 40, "username")
     # password_box = TextBox(screen, 200, 241, 350, 40, "password")
-    s = ScrollBox(screen, 20, 200, 600, 300, [pygame.image.load("images\\shoot.jpg"),pygame.image.load("images\\shoot.jpg")])
+    # s = ScrollBox(screen, 20, 200, 600, 300, [pygame.image.load("images\\shoot.jpg"),pygame.image.load("images\\shoot.jpg")])
+    p = Post(screen, 20, 100, 200, "dfsdsldjknlkjvlkjnjkjaal;skdf;asklsdghjkgjhkghkgjkl")
+    print p.text
+    p.get_lined_string()
+    print p.text
     while True:
         screen.fill((225, 225, 225))
 
@@ -236,7 +251,7 @@ def main():
             if event.type == pygame.QUIT:
                 exit()
 
-        s.show(events)
+        # s.show(events)
         #
         # background = pygame.image.load("authen.jpg")
         # screen.blit(background, (0, 0))
