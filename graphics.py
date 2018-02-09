@@ -194,23 +194,29 @@ class Post():
         self.color = (17, 22, 78)
         self.friend_button = DrawButton(self.screen, self.x+self.width-30-155, self.y+25, 155, 49,(17,22,78))
 
-    def get_lined_string(self):
+    def line_up(self):
         font = pygame.font.SysFont('', 30)
-        for index in range(len(self.text)):
-            widths = [x[4] for x in font.metrics(self.text)]
-            if sum(widths[:index]) / self.width > 0:
-                new_text = self.text[:index]+"\n"+self.text[index:]
-                break
-        self.text = new_text
+        line_width = self.width - self.friend_button.width
+        widths = [x[4] for x in font.metrics(self.text)]
+        words_width = [0]
+        line_len = 0
+        for i in range(len(self.text)):
+            if self.text[i] == " ":
+                words_width.append(0)
+            else:
+                words_width[-1] += widths[i]
+        words = self.text.split(" ")
+        show_text = ""
+        for i in range(len(words)):
+            if line_len + words_width[i] > line_width:
+                show_text += "\n" + words[i] + " "
+                line_len = words_width[i]
+            else:
+                show_text += words[i]+ " "
+                line_len += words_width[i]
+        return show_text
 
-    def r(self,string, limit, p):
-        font = pygame.font.SysFont('', 30)
-        widths = [x[4] for x in font.metrics(string)]
-        length = sum(widths)
-        if length - p < limit:
-            return string
-        else:
-            return self.r(string[1])
+
 
 
 
@@ -240,9 +246,6 @@ def main():
     # password_box = TextBox(screen, 200, 241, 350, 40, "password")
     # s = ScrollBox(screen, 20, 200, 600, 300, [pygame.image.load("images\\shoot.jpg"),pygame.image.load("images\\shoot.jpg")])
     p = Post(screen, 20, 100, 200, "dfsdsldjknlkjvlkjnjkjaal;skdf;asklsdghjkgjhkghkgjkl")
-    print p.text
-    p.get_lined_string()
-    print p.text
     while True:
         screen.fill((225, 225, 225))
 
