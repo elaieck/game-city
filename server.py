@@ -1,7 +1,7 @@
 import socket
 import threading
 from SQL_ORM import ORM
-import json
+import pickle
 
 db = ORM()
 srv_sock = socket.socket()
@@ -48,9 +48,9 @@ def recv_choice(sock):
     return db.get_game(game_id)
 
 def send_game_info(sock, game):
-    sock.send("GINFO~" + game.name + "~" + game.price)
-    posts = db.get_game_posts(game)
-    str_posts = json.dumps(posts)
+    sock.send("GINFO~" + str(game.name) + "~" + str(game.price))
+    posts = db.get_game_posts(game.id)
+    str_posts = pickle.dumps(posts)
     sock.send("GPOSTS~" + str_posts)
 
 
@@ -59,8 +59,9 @@ def server(sock):
         username = get_authen(sock)
         if username is not "":
             break
-    game = recv_choice(sock)
-    send_game_info(sock, game)
+    while True:
+        game = recv_choice(sock)
+        send_game_info(sock, game)
 
     # while True:
     #     data = sock.recv(1024)

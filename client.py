@@ -2,10 +2,13 @@ import socket
 import pygame
 import graphics
 import hashlib
+import pickle
 import subprocess
 
 pygame.init()
-screen = pygame.display.set_mode((750, 538))
+screen_width = 750
+screen_height = 538
+screen = pygame.display.set_mode((screen_width, screen_height))
 clock = pygame.time.Clock()
 
 
@@ -29,16 +32,27 @@ signup_password_box = graphics.TextBox(screen, 200, 236, 350, 40, "password")
 signup_confirm_box = graphics.TextBox(screen, 200, 300, 350, 40, "confirm password")
 sign_up_button = graphics.Button(196, 366, 360, 43, "sign up")
 
-
 #menu screen
 menu_background = pygame.image.load("games_menu.jpg")
 game_buttons = [
     graphics.ImageButton(screen, 37, 117, "images\shoot.jpg", "0"),
-    graphics.ImageButton(screen, 379, 117, "images\shoot.jpg", "1"),
-    graphics.ImageButton(screen, 37, 322, "images\shoot.jpg", "2"),
-    graphics.ImageButton(screen, 379, 322, "images\shoot.jpg", "3")
+    graphics.ImageButton(screen, 379, 117, "images\shoot.jpg", "0"),
+    graphics.ImageButton(screen, 37, 322, "images\shoot.jpg", "0"),
+    graphics.ImageButton(screen, 379, 322, "images\shoot.jpg", "0")
 ]
 
+#game page
+page_background = pygame.image.load("images\game_page_background.jpg")
+page_bar = pygame.image.load("images\page_bar.jpg")
+
+page_scroll_box = graphics.ScrollBox(screen, 0, page_bar.get_height(), screen_width, screen_height - page_bar.get_height(),
+                                     [
+                                         graphics.Post(screen,0,0,screen_width - 150, "a random post about a really important subject"),
+                                         graphics.Post(screen,0,0,screen_width - 150, "a random post about a really important subject"),
+                                         graphics.Post(screen,0,0,screen_width - 150, "a random post about a really important subject"),
+                                         graphics.Post(screen,0,0,screen_width - 150, "a random post about a really important subject"),
+                                         graphics.Post(screen,0,0,screen_width - 150, "a random post about a really important subject")
+                                     ])
 
 
 current_screen = "login"
@@ -103,13 +117,28 @@ while True:
         for game in game_buttons:
             game.show()
             if game.is_pressed(events):
-                # sock.send("CHSGM~" + game.description)
-                # current_screen = "game_page"
-                subprocess.Popen(["python", "shoot\\server.py"])
-                subprocess.Popen(["python", "shoot\\client.py"])
-                pass
+                sock.send("CHSGM~" + game.description)
+                current_screen = "game_page"
+                game_info = sock.recv(1024).split("~")
+                chosen_game = game_info[1]
+                game_price = game_info[2]
+                data = sock.recv(1024).split("~")
+                posts_info = pickle.loads(data[1])
+                posts = [graphics.Post(screen, 0, 0, screen_width - 150, post.content) for post in posts_info]
+                page_scroll_box.surfaces = posts
+                # subprocess.Popen(["python", "shoot\\server.py"])
+                # subprocess.Popen(["python", "shoot\\client.py"])
         pygame.display.flip()
 
     while current_screen == "game_page":
-        pass
+        events = pygame.event.get()
+        for event in events:
+            if event.type == pygame.QUIT:
+                exit()
+
+        screen.blit(page_background, (0, 0))
+        page_scroll_box.show(events)
+
+        screen.blit(page_bar, (0, 0))
+        pygame.display.flip()
 

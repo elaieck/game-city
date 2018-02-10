@@ -70,7 +70,7 @@ class ORM():
     def get_game(self, game_id):
         self.open_DB()
 
-        self.cursor.execute("SELECT * FROM games WHERE id IS \"" + game_id + "\"; ")
+        self.cursor.execute("SELECT * FROM games WHERE id IS \"" + str(game_id) + "\"; ")
         res = self.cursor.fetchall()
 
         if len(res) == 0:
@@ -86,7 +86,7 @@ class ORM():
     def get_game_posts(self, game_id):
         self.open_DB()
 
-        self.cursor.execute("SELECT * FROM posts WHERE game_id IS \""+game_id+"\"; ")
+        self.cursor.execute("SELECT * FROM posts WHERE game_id IS \""+str(game_id)+"\"; ")
         res = self.cursor.fetchall()
 
         if len(res) == 0:
@@ -97,7 +97,7 @@ class ORM():
             posts.append(post(int(post_list[0]), str(post_list[1]), str(post_list[2]), str(post_list[3])))
 
         self.close_DB()
-        return game_list
+        return posts
 
 
 
