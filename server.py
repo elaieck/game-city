@@ -2,6 +2,8 @@ import socket
 import threading
 from SQL_ORM import ORM
 import pickle
+import subprocess
+
 
 db = ORM()
 srv_sock = socket.socket()
@@ -62,6 +64,9 @@ def server(sock):
     while True:
         game = recv_choice(sock)
         send_game_info(sock, game)
+        if parts(sock.recv(1024))[0] == "PLAY":
+            subprocess.Popen(["python", "shoot\\server.py"])
+
 
     # while True:
     #     data = sock.recv(1024)

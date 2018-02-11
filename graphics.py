@@ -40,8 +40,6 @@ class TextBox():
             self.screen.blit(self.textinput.get_surface(), (self.x+4, self.y+11))
         else:
             font = pygame.font.SysFont('', self.size)
-            print self.textinput.get_text()
-            print font.metrics(self.textinput.get_text())
             if self.textinput.get_text() == "":
                 text = font.render(self.text, True, (127, 127, 127))
             else:
@@ -71,6 +69,17 @@ class Button():
                 return True
         return False
 
+    def set_position(self, x, y):
+        self.x = x
+        self.y = y
+
+    def get_height(self):
+        return self.height
+
+    def get_width(self):
+        return self.width
+
+
 
 class ImageButton(Button):
     def __init__(self, screen, x, y, image, description):
@@ -93,7 +102,9 @@ class DrawButton(Button):
         pygame.draw.rect(self.screen, self.color, (self.x, self.y, self.width, self.height))
         font = pygame.font.SysFont('', 30)
         text = font.render(self.description, True, self.text_color)
-        self.screen.blit(text, (self.x, self.y))
+        self.screen.blit(text, (self.x + (self.width - text.get_width()) / 2,
+                                self.y + (self.height - text.get_height()) / 2))
+
 
 
 class DialogBox():
@@ -133,7 +144,7 @@ class ScrollBox():
         self.surfaces = surfaces
         self.scroll_pos = 0
         self.margin = 15
-        self.scroller = DrawButton(self.screen, self.x+self.width - 50, self.y, 50, self.height, (255, 255, 255))
+        self.scroll_bar = DrawButton(self.screen, self.x+self.width - 50, self.y, 50, self.height, (255, 255, 255))
 
     def show(self, events):
         # pygame.draw.rect(self.screen, (255, 255, 0), (self.x, self.y, self.width, self.height))
@@ -146,14 +157,14 @@ class ScrollBox():
                 sur_y += surface.get_height() + self.margin
             else:
                 surface.set_position(sur_x, int(sur_y - float(self.scroll_pos) / self.height * (self.get_dept()-self.height)))
-                surface.update(events)
+                surface.show()
                 sur_y += surface.get_height() + self.margin
 
-        self.scroller.show()
+        self.scroll_bar.show()
         dept = self.get_dept()
         if dept > self.height:
             press_y = pygame.mouse.get_pos()[1]
-            if self.scroller.is_in() and pygame.mouse.get_pressed()[0]:
+            if self.scroll_bar.is_in() and pygame.mouse.get_pressed()[0]:
                 self.scroll_pos = press_y - self.y
 
     def get_dept(self):
@@ -164,29 +175,24 @@ class ScrollBox():
         return dept
 
 
-"""
-game page:
-colors: light purple: (146,144,244)
-        black purple: (17,22,78)
-        glowy greenish: (137,255,223)
-"""
-
 
 class Post():
 
-    def __init__(self, screen, x, y, width, text):
+    def __init__(self, screen, x, y, width, user, text):
         self.screen = screen
         self.x = x
         self.y = y
         self.width = width
+        self.user = user
         self.text = text
         self.frame_color = (146, 144, 244)
         self.fill_color = (17, 22, 78)
+        self.bright_color = (137, 255, 223)
         self.font_size = 30
         self.font = pygame.font.SysFont('', self.font_size)
         self.padding = 20
         self.friend_button = DrawButton(self.screen, self.x+self.width - 155 - self.padding,
-                                        self.y + self.padding, 155, 49, (137, 255, 223), text="add friend")
+                                        self.y + self.padding, 155, 49, self.bright_color, text="add friend")
 
     def line_up(self):
         line_width = self.width - self.friend_button.width - self.padding * 3
@@ -209,18 +215,20 @@ class Post():
                 line_len += words_width[i]
         return show_text
 
-    def update(self, events):
+    def show(self):
         lined_text = self.line_up().split("\n")
         pygame.draw.rect(self.screen, self.frame_color, (self.x, self.y, self.width, self.get_height()))
         pygame.draw.rect(self.screen, self.fill_color, (int(self.x+2), int(self.y+2), int(self.width-4), int(self.get_height())-4))
+        text = self.font.render(self.user, True, self.bright_color)
+        self.screen.blit(text, (self.x+self.padding, self.y + self.padding))
         for i in range(len(lined_text)):
             text = self.font.render(lined_text[i], True, (255, 255, 255))
-            self.screen.blit(text, (self.x+self.padding, self.y + self.padding + i * self.font_size))
+            self.screen.blit(text, (self.x+self.padding, self.y + self.padding + (i+1) * self.font_size))
         self.friend_button.show()
 
     def get_height(self):
         lined_text = self.line_up().split("\n")
-        return len(lined_text) * self.font_size + self.padding * 2
+        return (len(lined_text) + 1) * self.font_size + self.padding * 2
 
     def set_position(self, x, y):
         self.x = x
@@ -235,8 +243,8 @@ class Post():
 def screen_print(screen, x):
     font = pygame.font.SysFont('', 30)
     text = font.render(str(x), True, (0, 0, 0))
-    pygame.draw.rect(screen, (255, 255, 255), (0, 0, 150, 50))
-    screen.blit(text, (2, 2))
+    pygame.draw.rect(screen, (255, 255, 255), (50, 50, 150, 50))
+    screen.blit(text, (52, 52))
 
 
 def main():

@@ -44,15 +44,9 @@ game_buttons = [
 #game page
 page_background = pygame.image.load("images\game_page_background.jpg")
 page_bar = pygame.image.load("images\page_bar.jpg")
-
-page_scroll_box = graphics.ScrollBox(screen, 0, page_bar.get_height(), screen_width, screen_height - page_bar.get_height(),
-                                     [
-                                         graphics.Post(screen,0,0,screen_width - 150, "a random post about a really important subject"),
-                                         graphics.Post(screen,0,0,screen_width - 150, "a random post about a really important subject"),
-                                         graphics.Post(screen,0,0,screen_width - 150, "a random post about a really important subject"),
-                                         graphics.Post(screen,0,0,screen_width - 150, "a random post about a really important subject"),
-                                         graphics.Post(screen,0,0,screen_width - 150, "a random post about a really important subject")
-                                     ])
+page_back_button = graphics.Button(50, 30, 65, 21, "back")
+page_scroll_box = graphics.ScrollBox(screen, 0, page_bar.get_height(), screen_width,
+                                     screen_height - page_bar.get_height(), [])
 
 
 current_screen = "login"
@@ -120,14 +114,20 @@ while True:
                 sock.send("CHSGM~" + game.description)
                 current_screen = "game_page"
                 game_info = sock.recv(1024).split("~")
-                chosen_game = game_info[1]
-                game_price = game_info[2]
                 data = sock.recv(1024).split("~")
+
+                game_id = game.description
+                game_name = game_info[1]
+                game_price = game_info[2]
+                game_image = pygame.image.load("images\\"+game_name+".jpg")
                 posts_info = pickle.loads(data[1])
-                posts = [graphics.Post(screen, 0, 0, screen_width - 150, post.content) for post in posts_info]
-                page_scroll_box.surfaces = posts
+                play_button = graphics.DrawButton(screen, 0, 0, 120, 36, (137, 255, 223), "PLAY NOW")
+                buy_button = graphics.DrawButton(screen, 0, 0, 120, 36, (137, 255, 223), "BUY - " + game_price)
+                posts = [graphics.Post(screen, 0, 0, screen_width - 80, post.username, post.content)
+                         for post in posts_info[::-1]]
+
+                page_scroll_box.surfaces = [game_image] + [play_button] + [buy_button] + posts
                 # subprocess.Popen(["python", "shoot\\server.py"])
-                # subprocess.Popen(["python", "shoot\\client.py"])
         pygame.display.flip()
 
     while current_screen == "game_page":
@@ -136,9 +136,17 @@ while True:
             if event.type == pygame.QUIT:
                 exit()
 
+        if page_back_button.is_pressed(events):
+            current_screen = "menu"
+
+        if play_button.is_pressed(events):
+            sock.send("PLAY~"+game_id)
+            subprocess.Popen(["python", "shoot\\client.py"])
+
         screen.blit(page_background, (0, 0))
         page_scroll_box.show(events)
-
         screen.blit(page_bar, (0, 0))
+        # graphics.screen_print(screen, pygame.mouse.get_pos())
         pygame.display.flip()
+
 
