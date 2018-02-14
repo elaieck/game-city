@@ -80,7 +80,6 @@ class Button():
         return self.width
 
 
-
 class ImageButton(Button):
     def __init__(self, screen, x, y, image, description):
         self.image = pygame.image.load(image)
@@ -106,14 +105,13 @@ class DrawButton(Button):
                                 self.y + (self.height - text.get_height()) / 2))
 
 
-
 class DialogBox():
     def __init__(self, screen, x, y, text):
         self.screen = screen
         self.x = x
         self.y = y
         self.text = text
-        self.box = pygame.image.load("images\dialog.jpg")
+        self.box = pygame.image.load("images\dialog.png").convert_alpha()
         self.ok_button = Button(x+99, y+200, 120, 36)
         self.activated = False
 
@@ -127,7 +125,30 @@ class DialogBox():
             self.screen.blit(self.box, (self.x, self.y))
             font = pygame.font.SysFont('', 24)
             text = font.render(self.text, True, (120, 221, 213))
-            self.screen.blit(text, (self.x+35, self.y+40))
+            self.screen.blit(text, (int(self.x+self.box.get_width()/2-text.get_width()/2), self.y+40))
+            if self.ok_button.is_pressed(events):
+                break
+            pygame.display.flip()
+
+
+class PromptBox(DialogBox):
+    def __init__(self, screen, x, y, text):
+        DialogBox.__init__(self, screen, x, y, text)
+        self.text_box = TextBox(screen, self.x + 20, self.y + 60, 250, 30, text="Enter credit card")
+
+
+    def activate(self):
+        while True:
+            events = pygame.event.get()
+            for event in events:
+                if event.type == pygame.QUIT:
+                    exit()
+            self.screen.blit(self.box, (self.x, self.y))
+            font = pygame.font.SysFont('', 24)
+            text = font.render(self.text, True, (120, 221, 213))
+            self.screen.blit(text, (int(self.x+(self.box.get_width()/2-text.get_width()/2)), self.y+40))
+            pygame.draw.rect(self.screen, (255, 255, 255), (self.x + 20, self.y + 60, 250, 30))
+            self.text_box.update(events)
             if self.ok_button.is_pressed(events):
                 break
             pygame.display.flip()
@@ -254,10 +275,12 @@ def main():
 
     # username_box = TextBox(screen, 200, 175, 350, 40, "username")
     # password_box = TextBox(screen, 200, 241, 350, 40, "password")
-    p1 = Post(screen, 20, 100, 600, "this post is great. why do you think im over it?")
-    p2 = Post(screen, 20, 100, 600, "i like to move it move it, she likes to move it move it, yeah this is what i like")
-    image = pygame.image.load("images\\shoot.jpg")
-    s = ScrollBox(screen, 20, 200, 600, 300, [image, p1, p2, p1, p2, p1, p2])
+    # p1 = Post(screen, 20, 100, 600, "this post is great. why do you think im over it?")
+    # p2 = Post(screen, 20, 100, 600, "i like to move it move it, she likes to move it move it, yeah this is what i like")
+    # image = pygame.image.load("images\\shoot.jpg")
+    # s = ScrollBox(screen, 20, 200, 600, 300, [image, p1, p2, p1, p2, p1, p2])
+    x = PromptBox(screen, 200, 100, "credit card payment setup")
+    x.activate()
     while True:
         screen.fill((225, 225, 225))
 
@@ -267,7 +290,7 @@ def main():
                 exit()
 
         # screen_print(screen, "hi\nmy name is\nelai")
-        s.show(events)
+        # s.show(events)
         #
         # background = pygame.image.load("authen.jpg")
         # screen.blit(background, (0, 0))

@@ -12,6 +12,7 @@ port = 60000
 srv_sock.bind((ip, port))
 srv_sock.listen(10)
 threads = []
+game_is_open = False
 
 
 def parts(message):
@@ -20,11 +21,8 @@ def parts(message):
 
 def get_authen(sock):
     data = sock.recv(1024)
-    print "~"+data+"~"
     message = parts(data)
-    print message
     if message[0] == "LOGIN":
-        print "login is here"
         user = db.get_user(message[1])
         if user is None:
             sock.send("LOF")
@@ -45,10 +43,6 @@ def get_authen(sock):
             return ""
 
 
-def recv_choice(sock):
-    game_id = parts(sock.recv(1024))[1]
-    return db.get_game(game_id)
-
 def send_game_info(sock, game):
     sock.send("GINFO~" + str(game.name) + "~" + str(game.price))
     posts = db.get_game_posts(game.id)
@@ -62,15 +56,22 @@ def server(sock):
         if username is not "":
             break
     while True:
-        game = recv_choice(sock)
-        send_game_info(sock, game)
-        if parts(sock.recv(1024))[0] == "PLAY":
-            subprocess.Popen(["python", "shoot\\server.py"])
-
+        info = parts(sock.recv(1024))
+        action = info[0]
+        if action == "":
+            break
+        if action == "CHSGM":
+            game = db.get_game(info[1])
+            send_game_info(sock, game)
+        # if action == "PLAY":
+            # subprocess.Popen(["python", "shoot\\server.py"])
 
     # while True:
     #     data = sock.recv(1024)
 
+
+
+subprocess.Popen(["python", "shoot\\server.py"])
 while True:
     cli_s, addr = srv_sock.accept()
     t = threading.Thread(target=server, args=(cli_s,))

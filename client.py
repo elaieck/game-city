@@ -49,6 +49,7 @@ page_scroll_box = graphics.ScrollBox(screen, 0, page_bar.get_height(), screen_wi
                                      screen_height - page_bar.get_height(), [])
 
 
+
 current_screen = "login"
 while True:
 
