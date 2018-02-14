@@ -20,7 +20,7 @@ sock.connect((ip, port))
 #authentication screen
 login_background = pygame.image.load("authen.jpg")
 login_username_box = graphics.TextBox(screen, 200, 175, 350, 40, "username")
-login_password_box = graphics.TextBox(screen, 200, 241, 350, 40, "password")
+login_password_box = graphics.TextBox(screen, 200, 241, 350, 40, "password", False)
 login_button = graphics.Button(195, 307, 360, 43, "sign in")
 create_account_button = graphics.Button(394, 371, 151, 20, "create account")
 login_error_box = graphics.DialogBox(screen, 195, 123, "wrong password or username")
