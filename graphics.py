@@ -134,7 +134,7 @@ class DialogBox():
 class PromptBox(DialogBox):
     def __init__(self, screen, x, y, text):
         DialogBox.__init__(self, screen, x, y, text)
-        self.text_box = TextBox(screen, self.x + 20, self.y + 60, 250, 30, text="Enter credit card")
+        self.text_box = TextBox(screen, self.x + 20, self.y + 60, self.box.get_width() - 20, 30, text="Enter credit card")
 
 
     def activate(self):
@@ -147,7 +147,8 @@ class PromptBox(DialogBox):
             font = pygame.font.SysFont('', 24)
             text = font.render(self.text, True, (120, 221, 213))
             self.screen.blit(text, (int(self.x+(self.box.get_width()/2-text.get_width()/2)), self.y+40))
-            pygame.draw.rect(self.screen, (255, 255, 255), (self.x + 20, self.y + 60, 250, 30))
+            pygame.draw.rect(self.screen, (255, 255, 255),
+                             (self.text_box.x, self.text_box.y, self.text_box.width, self.text_box.height))
             self.text_box.update(events)
             if self.ok_button.is_pressed(events):
                 break

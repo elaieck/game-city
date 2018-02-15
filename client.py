@@ -47,6 +47,8 @@ page_bar = pygame.image.load("images\page_bar.jpg")
 page_back_button = graphics.Button(50, 30, 65, 21, "back")
 page_scroll_box = graphics.ScrollBox(screen, 0, page_bar.get_height(), screen_width,
                                      screen_height - page_bar.get_height(), [])
+page_buy_prompt = graphics.PromptBox(screen, 195, 123, "Credit Card Details")
+
 
 
 
@@ -140,9 +142,12 @@ while True:
         if page_back_button.is_pressed(events):
             current_screen = "menu"
 
-        if play_button.is_pressed(events):
+        elif play_button.is_pressed(events):
             sock.send("PLAY~"+game_id)
             subprocess.Popen(["python", "shoot\\client.py"])
+
+        elif buy_button.is_pressed(events):
+            page_buy_prompt.activate()
 
         screen.blit(page_background, (0, 0))
         page_scroll_box.show(events)
