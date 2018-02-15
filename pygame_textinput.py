@@ -121,7 +121,10 @@ class TextInput:
                 pygame.event.post(pygame.event.Event(pl.KEYDOWN, key=event_key, unicode=event_unicode))
 
         # Rerender text surface:
-        self.surface = self.font_object.render(self.input_string, self.antialias, self.text_color)
+        lines = self.input_string.split("\n")
+        for i in range(len(lines)):
+            line_surface = self.font_object.render(self.input_string, self.antialias, self.text_color)
+            self.surface.blit(line_surface, (0, i * self.font_size))
 
         # Update self.cursor_visible
         self.cursor_ms_counter += self.clock.get_time()
@@ -134,7 +137,7 @@ class TextInput:
             # Without this, the cursor is invisible when self.cursor_position > 0:
             if self.cursor_position > 0:
                 cursor_y_pos -= self.cursor_surface.get_width()
-            self.surface.blit(self.cursor_surface, (cursor_y_pos, 0))
+            self.surface.blit(self.cursor_surface, (cursor_y_pos, len(lines) * self.font_size))
 
         self.clock.tick()
         return False

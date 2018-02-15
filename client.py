@@ -17,10 +17,12 @@ ip = "127.0.0.1"    # means local
 port = 60000
 sock.connect((ip, port))
 
+shoot_image = pygame.image.load("images\shoot_image.jpg")
+
 #authentication screen
 login_background = pygame.image.load("authen.jpg")
 login_username_box = graphics.TextBox(screen, 200, 175, 350, 40, "username")
-login_password_box = graphics.TextBox(screen, 200, 241, 350, 40, "password", False)
+login_password_box = graphics.TextBox(screen, 200, 241, 350, 40, "password")
 login_button = graphics.Button(195, 307, 360, 43, "sign in")
 create_account_button = graphics.Button(394, 371, 151, 20, "create account")
 login_error_box = graphics.DialogBox(screen, 195, 123, "wrong password or username")
@@ -122,7 +124,7 @@ while True:
                 game_id = game.description
                 game_name = game_info[1]
                 game_price = game_info[2]
-                game_image = pygame.image.load("images\\"+game_name+".jpg")
+                game_image = pygame.image.load("images\\"+game_name+"_image.jpg")
                 posts_info = pickle.loads(data[1])
                 play_button = graphics.DrawButton(screen, 0, 0, 120, 36, (137, 255, 223), "PLAY NOW")
                 buy_button = graphics.DrawButton(screen, 0, 0, 120, 36, (137, 255, 223), "BUY - " + game_price)

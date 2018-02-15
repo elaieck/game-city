@@ -31,13 +31,15 @@ class TextBox():
 
     def update(self, events, hide=False):
         self.update_press()
-
+        lines = [self.textinput.font_object.render(x, True, (0, 0, 0)) for x in self.line_up().split("\n")]
+        print self.line_up().split("\n")
         if self.activated:
-            if self.textinput.get_surface().get_width() >= self.width - 15:
+            if lines[-1] >= self.width - 15 and len(lines) > (self.height - 20) / self.size:
                 self.textinput.update(events, True)
             else:
                 self.textinput.update(events)
-            self.screen.blit(self.textinput.get_surface(), (self.x+4, self.y+11))
+            for line in lines:
+                self.screen.blit(line, (self.x+4, self.y+11 + lines.index(line) * self.size))
         else:
             font = pygame.font.SysFont('', self.size)
             if self.textinput.get_text() == "":
@@ -46,8 +48,28 @@ class TextBox():
                 text = font.render(self.textinput.get_text(), True, (0, 0, 0))
             self.screen.blit(text, (self.x+4, self.y+11))
 
-    def get_text(self):
-        return self.textinput.get_text()
+    def line_up(self):
+        line_width = self.width - 15
+        if self.textinput.get_text() == "":
+            return ""
+        widths = [x[4] + 2 for x in self.textinput.font_object.metrics(self.textinput.get_text())]
+        words_width = [0]
+        line_len = 0
+        for i in range(len(self.textinput.get_text())):
+            if self.textinput.get_text()[i] == " ":
+                words_width.append(0)
+            else:
+                words_width[-1] += widths[i]
+        words = self.textinput.get_text().split(" ")
+        show_text = ""
+        for i in range(len(words)):
+            if line_len + words_width[i] > line_width:
+                show_text += "\n" + words[i] + " "
+                line_len = words_width[i]
+            else:
+                show_text += words[i] + " "
+                line_len += words_width[i]
+        return show_text
 
 
 class Button():
@@ -134,7 +156,7 @@ class DialogBox():
 class PromptBox(DialogBox):
     def __init__(self, screen, x, y, text):
         DialogBox.__init__(self, screen, x, y, text)
-        self.text_box = TextBox(screen, self.x + 20, self.y + 60, self.box.get_width() - 20, 30, text="Enter credit card")
+        self.text_box = TextBox(screen, self.x + 20, self.y + 60, self.box.get_width() - 40, 30, text="Enter credit card")
 
 
     def activate(self):
@@ -195,7 +217,6 @@ class ScrollBox():
             dept += surface.get_height()
         dept += self.margin * (len(self.surfaces)+1)
         return dept
-
 
 
 class Post():
@@ -280,8 +301,9 @@ def main():
     # p2 = Post(screen, 20, 100, 600, "i like to move it move it, she likes to move it move it, yeah this is what i like")
     # image = pygame.image.load("images\\shoot.jpg")
     # s = ScrollBox(screen, 20, 200, 600, 300, [image, p1, p2, p1, p2, p1, p2])
-    x = PromptBox(screen, 200, 100, "credit card payment setup")
-    x.activate()
+    # x = PromptBox(screen, 200, 100, "credit card payment setup")
+    # x.activate()
+    y = TextBox(screen, 40, 50, 400, 300, "enter text")
     while True:
         screen.fill((225, 225, 225))
 
@@ -299,7 +321,8 @@ def main():
         # pos = pygame.mouse.get_pos()
         # font = pygame.font.SysFont('arial', 30)
         # text = font.render(str(pos), True, (0, 0, 0))
-        pygame.draw.rect(screen, (0, 0, 0), (40, 50, 400, 15))
+        pygame.draw.rect(screen, (255, 255, 255), (40, 50, 400, 300))
+        y.update(events)
         # screen.blit(text, (2, 2))
         #
         # h = DialogBox(screen, 200, 175, "dfsgf")
