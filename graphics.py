@@ -32,7 +32,7 @@ class TextBox():
     def update(self, events, hide=False):
         self.update_press()
         lines = [self.textinput.font_object.render(x, True, (0, 0, 0)) for x in self.line_up().split("\n")]
-        print self.line_up().split("\n")
+        # print self.line_up().split("\n")
         if self.activated:
             if lines[-1] >= self.width - 15 and len(lines) > (self.height - 20) / self.size:
                 self.textinput.update(events, True)
@@ -54,16 +54,46 @@ class TextBox():
             return ""
         widths = [x[4] + 2 for x in self.textinput.font_object.metrics(self.textinput.get_text())]
         words_width = [0]
+        letters_width = [[]]
         line_len = 0
         for i in range(len(self.textinput.get_text())):
             if self.textinput.get_text()[i] == " ":
                 words_width.append(0)
+                letters_width.append([])
             else:
                 words_width[-1] += widths[i]
+                letters_width[-1].append(widths[i])
+
         words = self.textinput.get_text().split(" ")
+
+        i = 0
+        for lw in letters_width:
+            temp_list = []
+            temp_word = ""
+            temp_len = []
+            len_word = 0
+            if words_width[i] >= line_width:
+                for j in range(len(lw)):
+                    if len_word + lw[j] >= line_width:
+                        temp_list.append(temp_word)
+                        temp_word = words[i][j]
+                        temp_len.append(len_word)
+                        len_word = lw[j]
+                    else:
+                        temp_word += words[i][j]
+                        len_word += lw[j]
+                temp_list.append(temp_word)
+                temp_len.append(len_word)
+                words = words[:i] + temp_list + words[i+1:]
+                words_width = words_width[:i] + temp_len + words_width[:i+1]
+                i += len(temp_list)-1
+            i += 1
+
         show_text = ""
+        print words
+
         for i in range(len(words)):
-            if line_len + words_width[i] > line_width:
+            if line_len + words_width[i] >= line_width:
                 show_text += "\n" + words[i] + " "
                 line_len = words_width[i]
             else:

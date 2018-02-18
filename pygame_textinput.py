@@ -60,7 +60,7 @@ class TextInput:
 
         self.clock = pygame.time.Clock()
 
-    def update(self, events, block_write = False):
+    def update(self, events, block_write=False):
         for event in events:
             if event.type == pygame.KEYDOWN:
                 self.cursor_visible = True # So the user sees where he writes
@@ -69,7 +69,7 @@ class TextInput:
                 if not event.key in self.keyrepeat_counters:
                     self.keyrepeat_counters[event.key] = [0, event.unicode]
 
-                if event.key == pl.K_BACKSPACE: # FIXME: Delete at beginning of line?
+                if event.key == pl.K_BACKSPACE:  # FIXME: Delete at beginning of line?
                     self.input_string = self.input_string[:max(self.cursor_position - 1, 0)] + \
                                         self.input_string[self.cursor_position:]
 
@@ -80,6 +80,10 @@ class TextInput:
                                         self.input_string[self.cursor_position + 1:]
 
                 elif event.key == pl.K_RETURN:
+                    self.input_string = self.input_string[:self.cursor_position] + \
+                                            " \n" + \
+                                            self.input_string[self.cursor_position:]
+                    self.cursor_position += len(event.unicode) +1
                     return True
 
                 elif event.key == pl.K_RIGHT:
@@ -96,6 +100,7 @@ class TextInput:
                 elif event.key == pl.K_HOME:
                     self.cursor_position = 0
 
+
                 else:
                     # If no special key is pressed, add unicode of key to input_string
                     if not block_write:
@@ -110,7 +115,7 @@ class TextInput:
                     del self.keyrepeat_counters[event.key]
 
         # Update key counters:
-        for key in self.keyrepeat_counters :
+        for key in self.keyrepeat_counters:
             self.keyrepeat_counters[key][0] += self.clock.get_time() # Update clock
             # Generate new key events if enough time has passed:
             if self.keyrepeat_counters[key][0] >= self.keyrepeat_intial_interval_ms:
@@ -137,7 +142,7 @@ class TextInput:
             # Without this, the cursor is invisible when self.cursor_position > 0:
             if self.cursor_position > 0:
                 cursor_y_pos -= self.cursor_surface.get_width()
-            self.surface.blit(self.cursor_surface, (cursor_y_pos, len(lines) * self.font_size))
+            self.surface.blit(self.cursor_surface, (cursor_y_pos, 0))
 
         self.clock.tick()
         return False
