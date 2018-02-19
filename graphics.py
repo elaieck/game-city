@@ -34,12 +34,14 @@ class TextBox():
         lines = [self.textinput.font_object.render(x, True, (0, 0, 0)) for x in self.line_up().split("\n")]
         # print self.line_up().split("\n")
         if self.activated:
-            if lines[-1] >= self.width - 15 and len(lines) > (self.height - 20) / self.size:
+            print "len(lines): " + str(len(lines))
+            print "self.height: " + str((self.height - 22) / self.size)
+
+            if lines[-1].get_width() >= self.width - 30 and len(lines) >= (self.height - 22) / self.size:
                 self.textinput.update(events, True)
             else:
                 self.textinput.update(events)
-            for line in lines:
-                self.screen.blit(line, (self.x+4, self.y+11 + lines.index(line) * self.size))
+                self.screen.blit(self.textinput.get_surface(), (self.x+4, self.y+11))
         else:
             font = pygame.font.SysFont('', self.size)
             if self.textinput.get_text() == "":
@@ -49,22 +51,14 @@ class TextBox():
             self.screen.blit(text, (self.x+4, self.y+11))
 
     def line_up(self):
+        font = self.textinput.font_object
         line_width = self.width - 15
         if self.textinput.get_text() == "":
             return ""
-        widths = [x[4] + 2 for x in self.textinput.font_object.metrics(self.textinput.get_text())]
-        words_width = [0]
-        letters_width = [[]]
-        line_len = 0
-        for i in range(len(self.textinput.get_text())):
-            if self.textinput.get_text()[i] == " ":
-                words_width.append(0)
-                letters_width.append([])
-            else:
-                words_width[-1] += widths[i]
-                letters_width[-1].append(widths[i])
-
         words = self.textinput.get_text().split(" ")
+        words_width = [font.render(x, True, (0, 0, 0)).get_width() for x in words]
+        letters_width = [[font.render(letter, True, (0, 0, 0)).get_width() for letter in word] for word in words]
+        line_len = 0
 
         i = 0
         for lw in letters_width:
@@ -81,24 +75,30 @@ class TextBox():
                         len_word = lw[j]
                     else:
                         temp_word += words[i][j]
-                        len_word += lw[j]
+                        len_word = font.render(temp_word, True, (0, 0, 0)).get_width()
                 temp_list.append(temp_word)
                 temp_len.append(len_word)
                 words = words[:i] + temp_list + words[i+1:]
-                words_width = words_width[:i] + temp_len + words_width[:i+1]
+                words_width = words_width[:i] + temp_len + words_width[i+1:]
                 i += len(temp_list)-1
             i += 1
 
         show_text = ""
-        print words
-
+        line = ""
         for i in range(len(words)):
+            if words[i] != "":
+                if words[i][0] == "\n":
+                    line_len = 0
             if line_len + words_width[i] >= line_width:
                 show_text += "\n" + words[i] + " "
-                line_len = words_width[i]
+                line = words[i] + " "
+                line_len = words_width[i] + 6
             else:
                 show_text += words[i] + " "
-                line_len += words_width[i]
+                line += words[i] + " "
+                line_len += words_width[i] + 6
+        print line
+        print line_len
         return show_text
 
 

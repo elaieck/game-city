@@ -128,7 +128,7 @@ class TextInput:
         # Rerender text surface:
         lines = self.input_string.split("\n")
         for i in range(len(lines)):
-            line_surface = self.font_object.render(self.input_string, self.antialias, self.text_color)
+            line_surface = self.font_object.render(lines[i], self.antialias, self.text_color)
             self.surface.blit(line_surface, (0, i * self.font_size))
 
         # Update self.cursor_visible
@@ -138,11 +138,11 @@ class TextInput:
             self.cursor_visible = not self.cursor_visible
 
         if self.cursor_visible:
-            cursor_y_pos = self.font_object.size(self.input_string[:self.cursor_position])[0]
+            cursor_y_pos = self.font_object.size(lines[-1][:len(lines)])[0]
             # Without this, the cursor is invisible when self.cursor_position > 0:
             if self.cursor_position > 0:
                 cursor_y_pos -= self.cursor_surface.get_width()
-            self.surface.blit(self.cursor_surface, (cursor_y_pos, 0))
+            self.surface.blit(self.cursor_surface, (cursor_y_pos, self.font_size*(len(lines)-1)))
 
         self.clock.tick()
         return False
