@@ -42,8 +42,8 @@ class TextInput:
         self.font_object = pygame.font.Font(font_family, font_size)
 
         # Text-surface will be created during the first update call:
-        self.surface = pygame.Surface((1, 1))
-        self.surface.set_alpha(0)
+        self.surface = pygame.Surface((400,400), pygame.SRCALPHA, 32).convert_alpha()
+        # self.surface.fill((255,255,255))
 
         # Vars to make keydowns repeat after user pressed a key for some time:
         self.keyrepeat_counters = {} # {event.key: (counter_int, event.unicode)} (look for "***")
@@ -126,10 +126,17 @@ class TextInput:
                 pygame.event.post(pygame.event.Event(pl.KEYDOWN, key=event_key, unicode=event_unicode))
 
         # Rerender text surface:
-        lines = self.input_string.split("\n")
+        lines = self.line_up(400).split("\n")
+        # print lines
+        self.surface = pygame.Surface((400,400), pygame.SRCALPHA, 32).convert_alpha()
+        # self.surface.fill((255,255,255))
         for i in range(len(lines)):
             line_surface = self.font_object.render(lines[i], self.antialias, self.text_color)
             self.surface.blit(line_surface, (0, i * self.font_size))
+        s = self.font_object.render(lines[0], self.antialias, self.text_color)
+        # self.surface = s
+        # self.surface.blit(s, (0, 10))
+
 
         # Update self.cursor_visible
         self.cursor_ms_counter += self.clock.get_time()
@@ -142,7 +149,7 @@ class TextInput:
             # Without this, the cursor is invisible when self.cursor_position > 0:
             if self.cursor_position > 0:
                 cursor_y_pos -= self.cursor_surface.get_width()
-            self.surface.blit(self.cursor_surface, (cursor_y_pos, self.font_size*(len(lines)-1)))
+            # self.surface.blit(self.cursor_surface, (cursor_y_pos, self.font_size*(len(lines)-1)))
 
         self.clock.tick()
         return False
@@ -161,3 +168,52 @@ class TextInput:
 
     def set_cursor_color(self, color):
         self.cursor_surface.fill(color)
+
+    def line_up(self, width):
+        font = self.font_object
+        line_width = width - 15
+        if self.input_string == "":
+            return ""
+        words = self.input_string.split(" ")
+        words_width = [font.render(x, True, (0, 0, 0)).get_width() for x in words]
+        letters_width = [[font.render(letter, True, (0, 0, 0)).get_width() for letter in word] for word in words]
+        line_len = 0
+
+        i = 0
+        for lw in letters_width:
+            temp_list = []
+            temp_word = ""
+            temp_len = []
+            len_word = 0
+            if words_width[i] >= line_width:
+                for j in range(len(lw)):
+                    if len_word + lw[j] >= line_width:
+                        temp_list.append(temp_word)
+                        temp_word = words[i][j]
+                        temp_len.append(len_word)
+                        len_word = lw[j]
+                    else:
+                        temp_word += words[i][j]
+                        len_word = font.render(temp_word, True, (0, 0, 0)).get_width()
+                temp_list.append(temp_word)
+                temp_len.append(len_word)
+                words = words[:i] + temp_list + words[i+1:]
+                words_width = words_width[:i] + temp_len + words_width[i+1:]
+                i += len(temp_list)-1
+            i += 1
+
+        show_text = ""
+        line = ""
+        for i in range(len(words)):
+            if words[i] != "":
+                if words[i][0] == "\n":
+                    line_len = 0
+            if line_len + words_width[i] >= line_width:
+                show_text += "\n" + words[i] + " "
+                line = words[i] + " "
+                line_len = words_width[i] + 6
+            else:
+                show_text += words[i] + " "
+                line += words[i] + " "
+                line_len += words_width[i] + 6
+        return show_text

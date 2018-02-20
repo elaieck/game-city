@@ -34,8 +34,6 @@ class TextBox():
         lines = [self.textinput.font_object.render(x, True, (0, 0, 0)) for x in self.line_up().split("\n")]
         # print self.line_up().split("\n")
         if self.activated:
-            print "len(lines): " + str(len(lines))
-            print "self.height: " + str((self.height - 22) / self.size)
 
             if lines[-1].get_width() >= self.width - 30 and len(lines) >= (self.height - 22) / self.size:
                 self.textinput.update(events, True)
@@ -97,8 +95,6 @@ class TextBox():
                 show_text += words[i] + " "
                 line += words[i] + " "
                 line_len += words_width[i] + 6
-        print line
-        print line_len
         return show_text
 
 
@@ -334,6 +330,7 @@ def main():
     # x = PromptBox(screen, 200, 100, "credit card payment setup")
     # x.activate()
     y = TextBox(screen, 40, 50, 400, 300, "enter text")
+    print pygame.SRCALPHA
     while True:
         screen.fill((225, 225, 225))
 
