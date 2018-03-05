@@ -4,6 +4,8 @@ import graphics
 import hashlib
 import pickle
 import subprocess
+import datetime
+import threading
 
 pygame.init()
 screen_width = 750
@@ -47,9 +49,10 @@ game_buttons = [
 page_background = pygame.image.load("images\game_page_background.jpg")
 page_bar = pygame.image.load("images\page_bar.jpg")
 page_back_button = graphics.Button(50, 30, 65, 21, "back")
+page_write_post = graphics.WritePostBar(screen)
 page_scroll_box = graphics.ScrollBox(screen, 0, page_bar.get_height(), screen_width,
-                                     screen_height - page_bar.get_height(), [])
-page_buy_prompt = graphics.PromptBox(screen, 195, 123, "Credit Card Details")
+                                     screen_height - page_bar.get_height()- 58, [])
+page_buy_prompt = graphics.PromptBox(screen, 195, 123, 30, "Credit Card Details")
 
 
 
@@ -78,6 +81,7 @@ while True:
             recv = sock.recv(3)
             if recv == "LOS":
                 current_screen = "menu"
+                subprocess.Popen(["python", "friends_window.py"])
             else:
                 print "FAILED LOGIN :("
                 login_error_box.activate()
@@ -125,6 +129,7 @@ while True:
                 game_name = game_info[1]
                 game_price = game_info[2]
                 game_image = pygame.image.load("images\\"+game_name+"_image.jpg")
+                print data[1]
                 posts_info = pickle.loads(data[1])
                 play_button = graphics.DrawButton(screen, 0, 0, 120, 36, (137, 255, 223), "PLAY NOW")
                 buy_button = graphics.DrawButton(screen, 0, 0, 120, 36, (137, 255, 223), "BUY - " + game_price)
@@ -154,6 +159,9 @@ while True:
         screen.blit(page_background, (0, 0))
         page_scroll_box.show(events)
         screen.blit(page_bar, (0, 0))
+        post_content = page_write_post.update(events)
+        if post_content != "":
+            sock.send("POST~"+game_id+"~"+post_content+"~"+datetime.datetime.now().strftime("%Y-%m-%d %H:%M"))
         # graphics.screen_print(screen, pygame.mouse.get_pos())
         pygame.display.flip()
 

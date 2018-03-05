@@ -16,7 +16,8 @@ class TextInput:
     This class let's the user input a short, one-lines piece of text at a blinking cursor
     that can be moved using the arrow-keys. Delete, home and end work as well.
     """
-    def __init__(self, font_family = "",
+    def __init__(self, width, height,
+                        font_family = "",
                         font_size = 35,
                         antialias=True,
                         text_color=(0, 0, 0),
@@ -33,6 +34,8 @@ class TextInput:
             repeat_keys_interval_ms: ms between to keydown-repeats if key is not released
         """
 
+        self.width = width
+        self.height = height
         # Text related vars:
         self.antialias = antialias
         self.text_color = text_color
@@ -42,7 +45,7 @@ class TextInput:
         self.font_object = pygame.font.Font(font_family, font_size)
 
         # Text-surface will be created during the first update call:
-        self.surface = pygame.Surface((400,400), pygame.SRCALPHA, 32).convert_alpha()
+        self.surface = pygame.Surface((self.width ,self.height), pygame.SRCALPHA, 32).convert_alpha()
         # self.surface.fill((255,255,255))
 
         # Vars to make keydowns repeat after user pressed a key for some time:
@@ -51,7 +54,7 @@ class TextInput:
         self.keyrepeat_interval_ms = repeat_keys_interval_ms
 
         # Things cursor:
-        self.cursor_surface = pygame.Surface((int(self.font_size/20+1), self.font_size))
+        self.cursor_surface = pygame.Surface((int(self.font_size/20+1), font_size*3/4))
         self.cursor_surface.fill(cursor_color)
         self.cursor_position = 0 # Inside text
         self.cursor_visible = True # Switches every self.cursor_switch_ms ms
@@ -60,7 +63,8 @@ class TextInput:
 
         self.clock = pygame.time.Clock()
 
-    def update(self, events, block_write=False):
+    def update(self, events):
+
         for event in events:
             if event.type == pygame.KEYDOWN:
                 self.cursor_visible = True # So the user sees where he writes
@@ -80,11 +84,13 @@ class TextInput:
                                         self.input_string[self.cursor_position + 1:]
 
                 elif event.key == pl.K_RETURN:
-                    self.input_string = self.input_string[:self.cursor_position] + \
+                    lines = self.line_up(self.input_string, self.width).split("\n")
+                    if len(lines) < (self.height - 22) / self.font_size:
+                        self.input_string = self.input_string[:self.cursor_position] + \
                                             " \n" + \
                                             self.input_string[self.cursor_position:]
-                    self.cursor_position += len(event.unicode) +1
-                    return True
+                        self.cursor_position += len(event.unicode) +1
+                        return True
 
                 elif event.key == pl.K_RIGHT:
                     # Add one to cursor_pos, but do not exceed len(input_string)
@@ -102,12 +108,13 @@ class TextInput:
 
 
                 else:
-                    # If no special key is pressed, add unicode of key to input_string
-                    if not block_write:
-                        self.input_string = self.input_string[:self.cursor_position] + \
-                                            event.unicode + \
-                                            self.input_string[self.cursor_position:]
-                        self.cursor_position += len(event.unicode) # Some are empty, e.g. K_UP
+                    lines = self.line_up(self.input_string + event.unicode, self.width).split("\n")
+                    if len(lines) <= (self.height) / self.font_size:
+                            self.input_string = self.input_string[:self.cursor_position] + \
+                                                event.unicode + \
+                                                self.input_string[self.cursor_position:]
+                            self.cursor_position += len(event.unicode) # Some are empty, e.g. K_UP
+
 
             elif event.type == pl.KEYUP:
                 # *** Because KEYUP doesn't include event.unicode, this dict is stored in such a weird way
@@ -126,17 +133,13 @@ class TextInput:
                 pygame.event.post(pygame.event.Event(pl.KEYDOWN, key=event_key, unicode=event_unicode))
 
         # Rerender text surface:
-        lines = self.line_up(400).split("\n")
+        lines = self.line_up(self.input_string, self.width).split("\n")
         # print lines
-        self.surface = pygame.Surface((400,400), pygame.SRCALPHA, 32).convert_alpha()
+        self.surface = pygame.Surface((self.width, len(lines) * self.font_size), pygame.SRCALPHA, 32).convert_alpha()
         # self.surface.fill((255,255,255))
         for i in range(len(lines)):
             line_surface = self.font_object.render(lines[i], self.antialias, self.text_color)
             self.surface.blit(line_surface, (0, i * self.font_size))
-        s = self.font_object.render(lines[0], self.antialias, self.text_color)
-        # self.surface = s
-        # self.surface.blit(s, (0, 10))
-
 
         # Update self.cursor_visible
         self.cursor_ms_counter += self.clock.get_time()
@@ -144,18 +147,37 @@ class TextInput:
             self.cursor_ms_counter %= self.cursor_switch_ms
             self.cursor_visible = not self.cursor_visible
 
+        s = 0
+        if len(lines) > 1:
+            for i in range(len(lines) - 1):
+                s += len(lines[i])
+
         if self.cursor_visible:
-            cursor_y_pos = self.font_object.size(lines[-1][:len(lines)])[0]
+            cursor_y_pos = self.font_object.size(lines[-1][:self.cursor_position - s])[0]
             # Without this, the cursor is invisible when self.cursor_position > 0:
             if self.cursor_position > 0:
                 cursor_y_pos -= self.cursor_surface.get_width()
-            # self.surface.blit(self.cursor_surface, (cursor_y_pos, self.font_size*(len(lines)-1)))
+            self.surface.blit(self.cursor_surface, (cursor_y_pos, self.font_size*(len(lines)-1)))
 
         self.clock.tick()
         return False
 
+    def clear(self):
+        self.input_string = ""
+        self.cursor_position = 0
+
     def get_surface(self):
         return self.surface
+
+    def get_text_surface(self):
+        lines = self.line_up(self.input_string, self.width).split("\n")
+        # print lines
+        sur = pygame.Surface((self.width, len(lines) * self.font_size), pygame.SRCALPHA, 32).convert_alpha()
+        # self.surface.fill((255,255,255))
+        for i in range(len(lines)):
+            line_surface = self.font_object.render(lines[i], self.antialias, self.text_color)
+            sur.blit(line_surface, (0, i * self.font_size))
+        return sur
 
     def get_text(self):
         return self.input_string
@@ -169,12 +191,12 @@ class TextInput:
     def set_cursor_color(self, color):
         self.cursor_surface.fill(color)
 
-    def line_up(self, width):
+    def line_up(self, string, width):
         font = self.font_object
         line_width = width - 15
-        if self.input_string == "":
+        if string == "":
             return ""
-        words = self.input_string.split(" ")
+        words = string.split(" ")
         words_width = [font.render(x, True, (0, 0, 0)).get_width() for x in words]
         letters_width = [[font.render(letter, True, (0, 0, 0)).get_width() for letter in word] for word in words]
         line_len = 0

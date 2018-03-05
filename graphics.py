@@ -13,89 +13,39 @@ class TextBox():
         self.text = text
         self.size = size
         self.activated = False
-        self.textinput = pygame_textinput.TextInput(font_size=size)
+        self.textinput = pygame_textinput.TextInput(self.width, self.height, font_size=size)
         self.surface = pygame.Surface((1, 1))
         self.surface.set_alpha(0)
 
-    def _is_in(self):
+    def is_in(self):
         x_mouse, y_mouse = pygame.mouse.get_pos()
         return self.x <= x_mouse <= self.x+self.width and self.y <= y_mouse <= self.y+self.height
 
     def update_press(self):
         pressed1, pressed2, pressed3 = pygame.mouse.get_pressed()
         if pressed1:
-            if self._is_in():
+            if self.is_in():
                 self.activated = True
             else:
                 self.activated = False
 
     def update(self, events, hide=False):
         self.update_press()
-        lines = [self.textinput.font_object.render(x, True, (0, 0, 0)) for x in self.line_up().split("\n")]
-        # print self.line_up().split("\n")
         if self.activated:
-
-            if lines[-1].get_width() >= self.width - 30 and len(lines) >= (self.height - 22) / self.size:
-                self.textinput.update(events, True)
-            else:
-                self.textinput.update(events)
-                self.screen.blit(self.textinput.get_surface(), (self.x+4, self.y+11))
+            self.textinput.update(events)
+            self.screen.blit(self.textinput.get_surface(), (self.x+4, self.y+11))
         else:
-            font = pygame.font.SysFont('', self.size)
             if self.textinput.get_text() == "":
-                text = font.render(self.text, True, (127, 127, 127))
+                text = self.textinput.font_object.render(self.text, True, (127, 127, 127))
+                self.screen.blit(text, (self.x+4, self.y+11))
             else:
-                text = font.render(self.textinput.get_text(), True, (0, 0, 0))
-            self.screen.blit(text, (self.x+4, self.y+11))
+                self.screen.blit(self.textinput.get_text_surface(), (self.x+4, self.y+11))
 
-    def line_up(self):
-        font = self.textinput.font_object
-        line_width = self.width - 15
-        if self.textinput.get_text() == "":
-            return ""
-        words = self.textinput.get_text().split(" ")
-        words_width = [font.render(x, True, (0, 0, 0)).get_width() for x in words]
-        letters_width = [[font.render(letter, True, (0, 0, 0)).get_width() for letter in word] for word in words]
-        line_len = 0
+    def get_text(self):
+        return self.textinput.get_text()
 
-        i = 0
-        for lw in letters_width:
-            temp_list = []
-            temp_word = ""
-            temp_len = []
-            len_word = 0
-            if words_width[i] >= line_width:
-                for j in range(len(lw)):
-                    if len_word + lw[j] >= line_width:
-                        temp_list.append(temp_word)
-                        temp_word = words[i][j]
-                        temp_len.append(len_word)
-                        len_word = lw[j]
-                    else:
-                        temp_word += words[i][j]
-                        len_word = font.render(temp_word, True, (0, 0, 0)).get_width()
-                temp_list.append(temp_word)
-                temp_len.append(len_word)
-                words = words[:i] + temp_list + words[i+1:]
-                words_width = words_width[:i] + temp_len + words_width[i+1:]
-                i += len(temp_list)-1
-            i += 1
-
-        show_text = ""
-        line = ""
-        for i in range(len(words)):
-            if words[i] != "":
-                if words[i][0] == "\n":
-                    line_len = 0
-            if line_len + words_width[i] >= line_width:
-                show_text += "\n" + words[i] + " "
-                line = words[i] + " "
-                line_len = words_width[i] + 6
-            else:
-                show_text += words[i] + " "
-                line += words[i] + " "
-                line_len += words_width[i] + 6
-        return show_text
+    def clear(self):
+        self.textinput.clear()
 
 
 class Button():
@@ -180,9 +130,11 @@ class DialogBox():
 
 
 class PromptBox(DialogBox):
-    def __init__(self, screen, x, y, text):
+    def __init__(self, screen, x, y, box_height, text, box_text="Enter info"):
         DialogBox.__init__(self, screen, x, y, text)
-        self.text_box = TextBox(screen, self.x + 20, self.y + 60, self.box.get_width() - 40, 30, text="Enter credit card")
+        self.box_height = box_height
+        self.box_text = box_text
+        self.text_box = TextBox(screen, self.x + 20, self.y + 60, self.box.get_width() - 40, box_height, self.box_text)
 
 
     def activate(self):
@@ -202,6 +154,9 @@ class PromptBox(DialogBox):
                 break
             pygame.display.flip()
 
+    def get_text(self):
+        return self.text_box.get_text()
+
 
 class ScrollBox():
 
@@ -214,6 +169,7 @@ class ScrollBox():
         self.surfaces = surfaces
         self.scroll_pos = 0
         self.margin = 15
+        self.pressed = False
         self.scroll_bar = DrawButton(self.screen, self.x+self.width - 50, self.y, 50, self.height, (255, 255, 255))
 
     def show(self, events):
@@ -234,8 +190,17 @@ class ScrollBox():
         dept = self.get_dept()
         if dept > self.height:
             press_y = pygame.mouse.get_pos()[1]
-            if self.scroll_bar.is_in() and pygame.mouse.get_pressed()[0]:
+            for event in events:
+                if event.type == pygame.MOUSEBUTTONDOWN and self.scroll_bar.is_in():
+                    self.pressed = True
+                elif event.type == pygame.MOUSEBUTTONUP:
+                    self.pressed = False
+
+            if self.pressed:
+                press_y = max(press_y, self.y)
+                press_y = min(press_y, self.y + self.height)
                 self.scroll_pos = press_y - self.y
+
 
     def get_dept(self):
         dept = 0
@@ -264,24 +229,52 @@ class Post():
                                         self.y + self.padding, 155, 49, self.bright_color, text="add friend")
 
     def line_up(self):
-        line_width = self.width - self.friend_button.width - self.padding * 3
-        widths = [x[4] + 2 for x in self.font.metrics(self.text)]
-        words_width = [0]
-        line_len = 0
-        for i in range(len(self.text)):
-            if self.text[i] == " ":
-                words_width.append(0)
-            else:
-                words_width[-1] += widths[i]
+        font = self.font
+        line_width = self.width - self.friend_button.get_width() - self.padding * 3
+        if self.text == "":
+            return ""
         words = self.text.split(" ")
+        words_width = [font.render(x, True, (0, 0, 0)).get_width() for x in words]
+        letters_width = [[font.render(letter, True, (0, 0, 0)).get_width() for letter in word] for word in words]
+        line_len = 0
+
+        i = 0
+        for lw in letters_width:
+            temp_list = []
+            temp_word = ""
+            temp_len = []
+            len_word = 0
+            if words_width[i] >= line_width:
+                for j in range(len(lw)):
+                    if len_word + lw[j] >= line_width:
+                        temp_list.append(temp_word)
+                        temp_word = words[i][j]
+                        temp_len.append(len_word)
+                        len_word = lw[j]
+                    else:
+                        temp_word += words[i][j]
+                        len_word = font.render(temp_word, True, (0, 0, 0)).get_width()
+                temp_list.append(temp_word)
+                temp_len.append(len_word)
+                words = words[:i] + temp_list + words[i+1:]
+                words_width = words_width[:i] + temp_len + words_width[i+1:]
+                i += len(temp_list)-1
+            i += 1
+
         show_text = ""
+        line = ""
         for i in range(len(words)):
-            if line_len + words_width[i] > line_width:
+            if words[i] != "":
+                if words[i][0] == "\n":
+                    line_len = 0
+            if line_len + words_width[i] >= line_width:
                 show_text += "\n" + words[i] + " "
-                line_len = words_width[i]
+                line = words[i] + " "
+                line_len = words_width[i] + 6
             else:
                 show_text += words[i] + " "
-                line_len += words_width[i]
+                line += words[i] + " "
+                line_len += words_width[i] + 6
         return show_text
 
     def show(self):
@@ -306,6 +299,39 @@ class Post():
         self.friend_button.x = self.x + self.width - self.friend_button.width - self.padding
 
 
+class WritePostBar():
+    def __init__(self, screen):
+        self.screen = screen
+        self.activated = False
+        self.text_button = DrawButton(screen,  0, 480, 750, 58, (255,255,255), text="Write post...", text_color=(127, 127, 127))
+        self.fake_post_button = DrawButton(screen,  625, 480, 125, 58, (17, 22, 78), text="Post", text_color=(137, 255, 223))
+        self.text_box = TextBox(screen, 0, 300, 625, 238, "What's on your mind?")
+        self.post_button = DrawButton(screen,  625, 300, 125, 238, (17, 22, 78), text="Post", text_color=(137, 255, 223))
+
+    def update(self, events):
+        while self.activated:
+            events = pygame.event.get()
+            for event in events:
+                if event.type == pygame.QUIT:
+                    exit()
+                elif self.post_button.is_pressed(events):
+                    self.activated = False
+                    text = self.text_box.get_text()
+                    self.text_box.clear()
+                    return text
+                elif not self.text_box.is_in() and event.type == pygame.MOUSEBUTTONDOWN:
+                    self.activated = False
+            pygame.draw.rect(self.screen, (255, 255, 255), (0, 300, 625, 238))
+            self.text_box.update(events)
+            self.post_button.show()
+            pygame.display.flip()
+        else:
+            self.text_button.show()
+            self.fake_post_button.show()
+            if self.text_button.is_pressed(events):
+                self.activated = True
+        return ""
+
 
 
 
@@ -327,10 +353,12 @@ def main():
     # p2 = Post(screen, 20, 100, 600, "i like to move it move it, she likes to move it move it, yeah this is what i like")
     # image = pygame.image.load("images\\shoot.jpg")
     # s = ScrollBox(screen, 20, 200, 600, 300, [image, p1, p2, p1, p2, p1, p2])
-    # x = PromptBox(screen, 200, 100, "credit card payment setup")
+    # x = PromptBox(screen, 200, 100, 120, "credit card payment setup")
     # x.activate()
-    y = TextBox(screen, 40, 50, 400, 300, "enter text")
-    print pygame.SRCALPHA
+    # y = TextBox(screen, 40, 50, 400, 300, "enter text")
+    # bar = write_bar(screen)
+    import datetime
+    print datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
     while True:
         screen.fill((225, 225, 225))
 
@@ -338,7 +366,7 @@ def main():
         for event in events:
             if event.type == pygame.QUIT:
                 exit()
-
+        # bar.update(events)
         # screen_print(screen, "hi\nmy name is\nelai")
         # s.show(events)
         #
@@ -348,8 +376,8 @@ def main():
         # pos = pygame.mouse.get_pos()
         # font = pygame.font.SysFont('arial', 30)
         # text = font.render(str(pos), True, (0, 0, 0))
-        pygame.draw.rect(screen, (255, 255, 255), (40, 50, 400, 300))
-        y.update(events)
+        # pygame.draw.rect(screen, (255, 255, 255), (40, 50, 400, 300))
+        # y.update(events)
         # screen.blit(text, (2, 2))
         #
         # h = DialogBox(screen, 200, 175, "dfsgf")
