@@ -81,7 +81,7 @@ while True:
             recv = sock.recv(3)
             if recv == "LOS":
                 current_screen = "menu"
-                subprocess.Popen(["python", "friends_window.py"])
+                # subprocess.Popen(["python", "friends_window.py"])
             else:
                 print "FAILED LOGIN :("
                 login_error_box.activate()
@@ -123,7 +123,7 @@ while True:
                 sock.send("CHSGM~" + game.description)
                 current_screen = "game_page"
                 game_info = sock.recv(1024).split("~")
-                data = sock.recv(1024).split("~")
+                data = sock.recv(100000).split("~")
 
                 game_id = game.description
                 game_name = game_info[1]

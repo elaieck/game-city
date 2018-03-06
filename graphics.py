@@ -171,6 +171,7 @@ class ScrollBox():
         self.margin = 15
         self.pressed = False
         self.scroll_bar = DrawButton(self.screen, self.x+self.width - 50, self.y, 50, self.height, (255, 255, 255))
+        self.glow = ImageButton(self.screen, self.scroll_bar.x-5, self.y-25, "images/glow.png", "scroll position")
 
     def show(self, events):
         # pygame.draw.rect(self.screen, (255, 255, 0), (self.x, self.y, self.width, self.height))
@@ -191,7 +192,7 @@ class ScrollBox():
         if dept > self.height:
             press_y = pygame.mouse.get_pos()[1]
             for event in events:
-                if event.type == pygame.MOUSEBUTTONDOWN and self.scroll_bar.is_in():
+                if event.type == pygame.MOUSEBUTTONDOWN and self.glow.is_in():
                     self.pressed = True
                 elif event.type == pygame.MOUSEBUTTONUP:
                     self.pressed = False
@@ -200,6 +201,9 @@ class ScrollBox():
                 press_y = max(press_y, self.y)
                 press_y = min(press_y, self.y + self.height)
                 self.scroll_pos = press_y - self.y
+
+        self.glow.y = self.scroll_pos +self.y - 25
+        self.glow.show()
 
 
     def get_dept(self):
@@ -331,8 +335,6 @@ class WritePostBar():
             if self.text_button.is_pressed(events):
                 self.activated = True
         return ""
-
-
 
 
 def screen_print(screen, x):
