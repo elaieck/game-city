@@ -150,7 +150,7 @@ class TextInput:
         s = 0
         if len(lines) > 1:
             for i in range(len(lines) - 1):
-                s += len(lines[i])
+                s += len(lines[i]) - 1
 
         if self.cursor_visible:
             cursor_y_pos = self.font_object.size(lines[-1][:self.cursor_position - s])[0]
