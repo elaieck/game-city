@@ -343,6 +343,53 @@ def screen_print(screen, x):
     pygame.draw.rect(screen, (255, 255, 255), (50, 50, 150, 50))
     screen.blit(text, (52, 52))
 
+def line_up(string, width, font):
+        line_width = width - 15
+        if string == "":
+            return ""
+        words = string.split(" ")
+        words_width = [font.render(x, True, (0, 0, 0)).get_width() for x in words]
+        letters_width = [[font.render(letter, True, (0, 0, 0)).get_width() for letter in word] for word in words]
+        line_len = 0
+
+        i = 0
+        for lw in letters_width:
+            temp_list = []
+            temp_word = ""
+            temp_len = []
+            len_word = 0
+            if words_width[i] >= line_width:
+                for j in range(len(lw)):
+                    if len_word + lw[j] >= line_width:
+                        temp_list.append(temp_word)
+                        temp_word = words[i][j]
+                        temp_len.append(len_word)
+                        len_word = lw[j]
+                    else:
+                        temp_word += words[i][j]
+                        len_word = font.render(temp_word, True, (0, 0, 0)).get_width()
+                temp_list.append(temp_word)
+                temp_len.append(len_word)
+                words = words[:i] + temp_list + words[i+1:]
+                words_width = words_width[:i] + temp_len + words_width[i+1:]
+                i += len(temp_list)-1
+            i += 1
+
+        show_text = ""
+        line = ""
+        for i in range(len(words)):
+            if words[i] != "":
+                if words[i][0] == "\n":
+                    line_len = 0
+            if line_len + words_width[i] >= line_width:
+                show_text += "\n" + words[i] + " "
+                line = words[i] + " "
+                line_len = words_width[i] + 6
+            else:
+                show_text += words[i] + " "
+                line += words[i] + " "
+                line_len += words_width[i] + 6
+        return show_text
 
 def main():
     pygame.init()
