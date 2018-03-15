@@ -24,7 +24,7 @@ shoot_image = pygame.image.load("images\shoot_image.jpg")
 #authentication screen
 login_background = pygame.image.load("authen.jpg")
 login_username_box = graphics.TextBox(screen, 200, 175, 350, 40, "username")
-login_password_box = graphics.TextBox(screen, 200, 241, 350, 40, "password")
+login_password_box = graphics.TextBox(screen, 200, 241, 350, 40, "password", hide=True)
 login_button = graphics.Button(195, 307, 360, 43, "sign in")
 create_account_button = graphics.Button(394, 371, 151, 20, "create account")
 login_error_box = graphics.DialogBox(screen, 195, 123, "wrong password or username")
@@ -32,8 +32,8 @@ login_error_box = graphics.DialogBox(screen, 195, 123, "wrong password or userna
 #register screen
 signup_background = pygame.image.load("signup.jpg")
 signup_username_box = graphics.TextBox(screen, 200, 170, 350, 40, "username")
-signup_password_box = graphics.TextBox(screen, 200, 236, 350, 40, "password")
-signup_confirm_box = graphics.TextBox(screen, 200, 300, 350, 40, "confirm password")
+signup_password_box = graphics.TextBox(screen, 200, 236, 350, 40, "password", hide=True)
+signup_confirm_box = graphics.TextBox(screen, 200, 300, 350, 40, "confirm password", hide=True)
 sign_up_button = graphics.Button(196, 366, 360, 43, "sign up")
 
 #menu screen

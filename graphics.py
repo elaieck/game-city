@@ -4,7 +4,7 @@ import pygame_textinput
 
 class TextBox():
 
-    def __init__(self, screen, x, y, width, height, text="", size=30):
+    def __init__(self, screen, x, y, width, height, text="", size=30, hide=False):
         self.screen = screen
         self.x = x
         self.y = y
@@ -13,7 +13,7 @@ class TextBox():
         self.text = text
         self.size = size
         self.activated = False
-        self.textinput = pygame_textinput.TextInput(self.width, self.height, font_size=size)
+        self.textinput = pygame_textinput.TextInput(self.width, self.height, font_size=size, hide=hide)
         self.surface = pygame.Surface((1, 1))
         self.surface.set_alpha(0)
 
@@ -29,7 +29,7 @@ class TextBox():
             else:
                 self.activated = False
 
-    def update(self, events, hide=False):
+    def update(self, events):
         self.update_press()
         if self.activated:
             self.textinput.update(events)
@@ -79,8 +79,11 @@ class Button():
 
 
 class ImageButton(Button):
-    def __init__(self, screen, x, y, image, description):
-        self.image = pygame.image.load(image)
+    def __init__(self, screen, x, y, image, description=""):
+        if type(image) is str:
+            self.image = pygame.image.load(image)
+        else:
+            self.image = image
         Button.__init__(self, x, y, self.image.get_width(), self.image.get_height(), description)
         self.screen = screen
 
@@ -160,7 +163,7 @@ class PromptBox(DialogBox):
 
 class ScrollBox():
 
-    def __init__(self, screen, x, y, width, height, surfaces=[]):
+    def __init__(self, screen, x, y, width, height, surfaces=[], margin=15):
         self.screen = screen
         self.x = x
         self.y = y
@@ -168,18 +171,19 @@ class ScrollBox():
         self.height = height
         self.surfaces = surfaces
         self.scroll_pos = 0
-        self.margin = 15
+        self.margin = margin
         self.pressed = False
-        self.scroll_bar = DrawButton(self.screen, self.x+self.width - 50, self.y, 50, self.height, (255, 255, 255))
-        self.glow = ImageButton(self.screen, self.scroll_bar.x-5, self.y-25, "images/glow.png", "scroll position")
+        self.scroll_bar_rect = (self.x+self.width - 25, self.y + 50, 5, self.height-100)
+        self.thumb = ImageButton(self.screen, self.x+self.width - 47, self.y, "images/glow.png", "scroll position")
 
     def show(self, events):
         # pygame.draw.rect(self.screen, (255, 255, 0), (self.x, self.y, self.width, self.height))
         sur_x = self.x + self.margin
         sur_y = self.y + self.margin
+        scroll_height = self.scroll_bar_rect[3]
         for surface in self.surfaces:
             if type(surface) is pygame.Surface:
-                showed_y = int(sur_y - float(self.scroll_pos) / self.height * (self.get_dept()-self.height))
+                showed_y = int(sur_y - float(self.scroll_pos) / scroll_height * (self.get_dept()-self.height))
                 self.screen.blit(surface, (sur_x, showed_y))
                 sur_y += surface.get_height() + self.margin
             else:
@@ -187,23 +191,24 @@ class ScrollBox():
                 surface.show()
                 sur_y += surface.get_height() + self.margin
 
-        self.scroll_bar.show()
+        # self.scroll_bar.show()
+        pygame.draw.rect(self.screen, (255, 255, 255), self.scroll_bar_rect)
         dept = self.get_dept()
-        if dept > self.height:
-            press_y = pygame.mouse.get_pos()[1]
-            for event in events:
-                if event.type == pygame.MOUSEBUTTONDOWN and self.glow.is_in():
-                    self.pressed = True
-                elif event.type == pygame.MOUSEBUTTONUP:
-                    self.pressed = False
+        # if dept > self.height:
+        press_y = pygame.mouse.get_pos()[1]
+        for event in events:
+            if event.type == pygame.MOUSEBUTTONDOWN and self.thumb.is_in():
+                self.pressed = True
+            elif event.type == pygame.MOUSEBUTTONUP:
+                self.pressed = False
 
-            if self.pressed:
-                press_y = max(press_y, self.y)
-                press_y = min(press_y, self.y + self.height)
-                self.scroll_pos = press_y - self.y
+        if self.pressed:
+            press_y = max(press_y, self.scroll_bar_rect[1])
+            press_y = min(press_y, self.scroll_bar_rect[1] + self.scroll_bar_rect[3])
+            self.scroll_pos = press_y - self.scroll_bar_rect[1]
 
-        self.glow.y = self.scroll_pos +self.y - 25
-        self.glow.show()
+        self.thumb.y = self.scroll_pos + self.y + 25
+        self.thumb.show()
 
 
     def get_dept(self):
@@ -211,7 +216,7 @@ class ScrollBox():
         for surface in self.surfaces:
             dept += surface.get_height()
         dept += self.margin * (len(self.surfaces)+1)
-        return dept
+        return max(dept, self.height)
 
 
 class Post():

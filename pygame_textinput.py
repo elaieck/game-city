@@ -16,7 +16,7 @@ class TextInput:
     This class let's the user input a short, one-lines piece of text at a blinking cursor
     that can be moved using the arrow-keys. Delete, home and end work as well.
     """
-    def __init__(self, width, height,
+    def __init__(self, width, height, hide=False,
                         font_family = "",
                         font_size = 35,
                         antialias=True,
@@ -37,6 +37,7 @@ class TextInput:
         self.width = width
         self.height = height
         # Text related vars:
+        self.hide = hide
         self.antialias = antialias
         self.text_color = text_color
         self.font_size = font_size
@@ -113,7 +114,7 @@ class TextInput:
                             self.input_string = self.input_string[:self.cursor_position] + \
                                                 event.unicode + \
                                                 self.input_string[self.cursor_position:]
-                            self.cursor_position += len(event.unicode) # Some are empty, e.g. K_UP
+                            self.cursor_position += len(event.unicode)  # Some are empty, e.g. K_UP
 
 
             elif event.type == pl.KEYUP:
@@ -133,10 +134,11 @@ class TextInput:
                 pygame.event.post(pygame.event.Event(pl.KEYDOWN, key=event_key, unicode=event_unicode))
 
         # Rerender text surface:
-        lines = self.line_up(self.input_string, self.width).split("\n")
-        # print lines
+        if self.hide:
+            lines = self.line_up("*"*len(self.input_string), self.width).split("\n")
+        else:
+            lines = self.line_up(self.input_string, self.width).split("\n")
         self.surface = pygame.Surface((self.width, len(lines) * self.font_size), pygame.SRCALPHA, 32).convert_alpha()
-        # self.surface.fill((255,255,255))
         for i in range(len(lines)):
             line_surface = self.font_object.render(lines[i], self.antialias, self.text_color)
             self.surface.blit(line_surface, (0, i * self.font_size))
@@ -170,10 +172,11 @@ class TextInput:
         return self.surface
 
     def get_text_surface(self):
-        lines = self.line_up(self.input_string, self.width).split("\n")
-        # print lines
+        if self.hide:
+            lines = self.line_up("*"*len(self.input_string), self.width).split("\n")
+        else:
+            lines = self.line_up(self.input_string, self.width).split("\n")
         sur = pygame.Surface((self.width, len(lines) * self.font_size), pygame.SRCALPHA, 32).convert_alpha()
-        # self.surface.fill((255,255,255))
         for i in range(len(lines)):
             line_surface = self.font_object.render(lines[i], self.antialias, self.text_color)
             sur.blit(line_surface, (0, i * self.font_size))
