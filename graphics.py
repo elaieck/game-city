@@ -181,13 +181,14 @@ class ScrollBox():
         sur_x = self.x + self.margin
         sur_y = self.y + self.margin
         scroll_height = self.scroll_bar_rect[3]
+        scroll_y = self.scroll_bar_rect[1]
         for surface in self.surfaces:
             if type(surface) is pygame.Surface:
                 showed_y = int(sur_y - float(self.scroll_pos) / scroll_height * (self.get_dept()-self.height))
                 self.screen.blit(surface, (sur_x, showed_y))
                 sur_y += surface.get_height() + self.margin
             else:
-                surface.set_position(sur_x, int(sur_y - float(self.scroll_pos) / self.height * (self.get_dept()-self.height)))
+                surface.set_position(sur_x, int(sur_y - float(self.scroll_pos) / scroll_height * (self.get_dept()-self.height)))
                 surface.show()
                 sur_y += surface.get_height() + self.margin
 
@@ -203,8 +204,8 @@ class ScrollBox():
                 self.pressed = False
 
         if self.pressed:
-            press_y = max(press_y, self.scroll_bar_rect[1])
-            press_y = min(press_y, self.scroll_bar_rect[1] + self.scroll_bar_rect[3])
+            press_y = max(press_y, scroll_y)
+            press_y = min(press_y, scroll_y + scroll_height)
             self.scroll_pos = press_y - self.scroll_bar_rect[1]
 
         self.thumb.y = self.scroll_pos + self.y + 25
@@ -412,7 +413,7 @@ def main():
     # y = TextBox(screen, 40, 50, 400, 300, "enter text")
     # bar = write_bar(screen)
     import datetime
-    print datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
+    print datetime.datetime.now().strftime("%d.%m.%Y")
     while True:
         screen.fill((225, 225, 225))
 

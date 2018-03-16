@@ -1,5 +1,6 @@
 import sqlite3
 import json
+import datetime
     # https://docs.python.org/2/library/sqlite3.html
     # https://www.youtube.com/watch?v=U7nfe4adDw8
 
@@ -62,7 +63,9 @@ class ORM():
 
         res = res[0]
 
-        usr = user( str(res[0]), str(res[1]), json.loads(res[2]), json.loads(res[3]) )
+        games_list = [(x[:2], x[2:]) for x in json.loads(res[3])]
+
+        usr = user( str(res[0]), str(res[1]), json.loads(res[2]), games_list )
 
         self.close_DB()
         return usr
@@ -114,7 +117,7 @@ class ORM():
 
         self.open_DB()
         sql = "INSERT INTO users (name, password, friends, games) VALUES " \
-              "('%s', '%s', '[]', '[]')" % (username, password)
+              "('%s', '%s', '%s', '%s')" % (username, password, '[]', '[]')
         self.cursor.execute(sql)
         self.commit()
         self.close_DB()
@@ -133,9 +136,12 @@ class ORM():
         self.commit()
         self.close_DB()
 
-    def buy_game(self, username, game_id, ex_dateime):
+    def buy_game(self, username, game_id):
+        games = self.get_user(username).games
+        games.append(game_id+datetime.datetime.now().strftime("%d.%m.%Y"))
+        sql = "UPDATE users SET games = %s WHERE name IS %s" % (games, username)
         self.open_DB()
-
+        self.cursor.execute(sql)
         self.commit()
         self.close_DB()
 
@@ -150,6 +156,7 @@ class ORM():
 
         self.commit()
         self.close_DB()
+
 
 def main_test():
 

@@ -67,10 +67,24 @@ def server(sock):
             send_game_info(sock, game)
         elif action == "POST":
             db.insert_new_post(int(info[1]), info[2], user.name, info[3])
-        # if action == "PLAY":
-            # subprocess.Popen(["python", "shoot\\server.py"])
+        if action == "PLAY":
+            purchased_games_info = db.get_user(user.name).games
+            purchased_games = [game_info[:2] for game_info in purchased_games_info]
+            if info[1] in purchased_games:
+                pass
+        if action == "BUY":
+            purchased_games_info = db.get_user(user.name).games
+            purchased_games = [game_info[:2] for game_info in purchased_games_info]
+            if info[1] in purchased_games:
+                sock.send("APRCHSD")
+            else:
+                pass
 
-    # while True:
+
+
+
+
+# while True:
     #     data = sock.recv(1024)
 
 
