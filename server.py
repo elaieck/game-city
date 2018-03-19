@@ -47,15 +47,23 @@ def send_game_info(sock, game):
     sock.send("GINFO~" + str(game.name) + "~" + str(game.price))
     posts = db.get_game_posts(game.id)
     str_posts = pickle.dumps(posts)
-    print str_posts
-    print pickle.loads(str_posts)
     sock.send("GPOSTS~" + str_posts)
+
+def game_bought(game_id, username):
+    purchased_games_info = db.get_user(username).games
+    purchased_games = [game_info[:2] for game_info in purchased_games_info]
+    return game_id in purchased_games
+
 
 
 def server(sock):
     while True:
         user = get_authen(sock)
         if user is not None:
+            print user.name
+            print user.password
+            print user.friends
+            print user.games
             break
     while True:
         info = parts(sock.recv(1024))
@@ -67,18 +75,21 @@ def server(sock):
             send_game_info(sock, game)
         elif action == "POST":
             db.insert_new_post(int(info[1]), info[2], user.name, info[3])
-        if action == "PLAY":
-            purchased_games_info = db.get_user(user.name).games
-            purchased_games = [game_info[:2] for game_info in purchased_games_info]
-            if info[1] in purchased_games:
+        elif action == "PLAY":
+            if game_bought(info[1], user.name):
                 pass
-        if action == "BUY":
-            purchased_games_info = db.get_user(user.name).games
-            purchased_games = [game_info[:2] for game_info in purchased_games_info]
-            if info[1] in purchased_games:
-                sock.send("APRCHSD")
+                #sock.send(IP OF SERVER + TOKEN TO PLAY)
             else:
                 pass
+                # sock.send("BUYPLZ")
+        elif action == "BUY":
+            print info[1]
+            print user.name
+            if game_bought(info[1], user.name):
+                sock.send("ALBUY")
+            else:
+                db.buy_game(user.name, info[1])
+                sock.send("BUYSUC")
 
 
 

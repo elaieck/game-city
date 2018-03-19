@@ -39,10 +39,10 @@ sign_up_button = graphics.Button(196, 366, 360, 43, "sign up")
 #menu screen
 menu_background = pygame.image.load("games_menu.jpg")
 game_buttons = [
-    graphics.ImageButton(screen, 37, 117, "images\shoot.jpg", "0"),
-    graphics.ImageButton(screen, 379, 117, "images\shoot.jpg", "0"),
-    graphics.ImageButton(screen, 37, 322, "images\shoot.jpg", "0"),
-    graphics.ImageButton(screen, 379, 322, "images\shoot.jpg", "0")
+    graphics.ImageButton(screen, 37, 117, "images\shoot.jpg", "00"),
+    graphics.ImageButton(screen, 379, 117, "images\shoot.jpg", "00"),
+    graphics.ImageButton(screen, 37, 322, "images\shoot.jpg", "00"),
+    graphics.ImageButton(screen, 379, 322, "images\shoot.jpg", "00")
 ]
 
 #game page
@@ -155,6 +155,8 @@ while True:
 
         elif buy_button.is_pressed(events):
             page_buy_prompt.activate()
+            sock.send("BUY~"+game_id)
+            recv = sock.recv(1024)
 
         screen.blit(page_background, (0, 0))
         page_scroll_box.show(events)
