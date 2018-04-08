@@ -60,10 +60,6 @@ def server(sock):
     while True:
         user = get_authen(sock)
         if user is not None:
-            print user.name
-            print user.password
-            print user.friends
-            print user.games
             break
     while True:
         info = parts(sock.recv(1024))
@@ -77,14 +73,11 @@ def server(sock):
             db.insert_new_post(int(info[1]), info[2], user.name, info[3])
         elif action == "PLAY":
             if game_bought(info[1], user.name):
-                pass
-                #sock.send(IP OF SERVER + TOKEN TO PLAY)
+                sock.send("approved")
             else:
-                pass
-                # sock.send("BUYPLZ")
+
+                sock.send("BUYPLZ")
         elif action == "BUY":
-            print info[1]
-            print user.name
             if game_bought(info[1], user.name):
                 sock.send("ALBUY")
             else:

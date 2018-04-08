@@ -35,6 +35,7 @@ signup_username_box = graphics.TextBox(screen, 200, 170, 350, 40, "username")
 signup_password_box = graphics.TextBox(screen, 200, 236, 350, 40, "password", hide=True)
 signup_confirm_box = graphics.TextBox(screen, 200, 300, 350, 40, "confirm password", hide=True)
 sign_up_button = graphics.Button(196, 366, 360, 43, "sign up")
+signup_back_button = graphics.Button(0, 0, 72, 72, "back")
 
 #menu screen
 menu_background = pygame.image.load("games_menu.jpg")
@@ -51,8 +52,10 @@ page_bar = pygame.image.load("images\page_bar.jpg")
 page_back_button = graphics.Button(50, 30, 65, 21, "back")
 page_write_post = graphics.WritePostBar(screen)
 page_scroll_box = graphics.ScrollBox(screen, 0, page_bar.get_height(), screen_width,
-                                     screen_height - page_bar.get_height()- 58, [])
+                                     screen_height - page_bar.get_height() - 58, [])
 page_buy_prompt = graphics.PromptBox(screen, 195, 123, 30, "Credit Card Details")
+page_bought_message = graphics.DialogBox(screen, 195, 123, "you already purchased this game")
+page_need_to_buy = graphics.DialogBox(screen, 195, 123, "you have to purchase this game")
 
 
 
@@ -108,6 +111,9 @@ while True:
                 current_screen = "login"
             else:
                 print "SIGN UP FAILED :("
+        if signup_back_button.is_pressed(events):
+            current_screen = "login"
+
         pygame.display.flip()
 
     while current_screen == "menu":
@@ -151,12 +157,20 @@ while True:
 
         elif play_button.is_pressed(events):
             sock.send("PLAY~"+game_id)
-            subprocess.Popen(["python", "shoot\\client.py"])
+            answer = sock.recv(1024)
+            if answer == "approved":
+                subprocess.Popen(["python", "shoot\\client.py"])
+            else:
+                page_need_to_buy.activate()
+
 
         elif buy_button.is_pressed(events):
-            page_buy_prompt.activate()
             sock.send("BUY~"+game_id)
             recv = sock.recv(1024)
+            if recv == "ALBUY":
+                page_bought_message.activate()
+            else:
+                page_buy_prompt.activate()
 
         screen.blit(page_background, (0, 0))
         page_scroll_box.show(events)

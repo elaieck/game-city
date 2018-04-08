@@ -1,6 +1,9 @@
 import pygame
 import pygame_textinput
 
+VIOLET = (146, 144, 244)
+PURPLE = (17, 22, 78)
+GREEN = (137, 255, 223)
 
 class TextBox():
 
@@ -92,13 +95,16 @@ class ImageButton(Button):
 
 
 class DrawButton(Button):
-    def __init__(self, screen,  x, y, width, height, color, text="", text_color=(255, 255, 255)):
+    def __init__(self, screen,  x, y, width, height, color, text="", text_color=(255, 255, 255), stroke_color=None):
         Button.__init__(self, x, y, width, height, text)
         self.color = color
         self.screen = screen
         self.text_color = text_color
+        self.stroke_color = stroke_color
 
     def show(self):
+        if self.stroke_color is not None:
+            pygame.draw.rect(self.screen, self.stroke_color, (self.x-1, self.y-1, self.width+2, self.height+2))
         pygame.draw.rect(self.screen, self.color, (self.x, self.y, self.width, self.height))
         font = pygame.font.SysFont('', 30)
         text = font.render(self.description, True, self.text_color)
@@ -182,6 +188,7 @@ class ScrollBox():
         sur_y = self.y + self.margin
         scroll_height = self.scroll_bar_rect[3]
         scroll_y = self.scroll_bar_rect[1]
+        sur = pygame.Surface((self.width, self.height), pygame.SRCALPHA, 32).convert_alpha()
         for surface in self.surfaces:
             if type(surface) is pygame.Surface:
                 showed_y = int(sur_y - float(self.scroll_pos) / scroll_height * (self.get_dept()-self.height))
@@ -211,6 +218,8 @@ class ScrollBox():
         self.thumb.y = self.scroll_pos + self.y + 25
         self.thumb.show()
 
+        self.screen.blit(sur, (self.x, self.y), (self.x, self.y, self.width, self.height))
+
 
     def get_dept(self):
         dept = 0
@@ -229,9 +238,9 @@ class Post():
         self.width = width
         self.user = user
         self.text = text
-        self.frame_color = (146, 144, 244)
-        self.fill_color = (17, 22, 78)
-        self.bright_color = (137, 255, 223)
+        self.frame_color = VIOLET
+        self.fill_color = PURPLE
+        self.bright_color = GREEN
         self.font_size = 30
         self.font = pygame.font.SysFont('', self.font_size)
         self.padding = 20
@@ -343,6 +352,22 @@ class WritePostBar():
         return ""
 
 
+class FriendsBar():
+
+    def __init__(self, screen, x, y):
+        self.background = pygame.image.load("images\\friends.png")
+        self.scroll_box = ScrollBox(screen, x, 100, self.background.get_width(), self.background.get_height()-100)
+        self.friends = []
+
+    def set_friends(self, friends_list):
+        self.friends = friends_list
+        self.scroll_box.surfaces = [DrawButton(self.scroll_box.screen, 0, 0, 210, 40, PURPLE, friend, GREEN, GREEN)
+                                    for friend in friends_list]
+
+
+
+
+
 def screen_print(screen, x):
     font = pygame.font.SysFont('', 30)
     text = font.render(str(x), True, (0, 0, 0))
@@ -402,18 +427,9 @@ def main():
     screen = pygame.display.set_mode((750, 538))
     clock = pygame.time.Clock()
 
-    # username_box = TextBox(screen, 200, 175, 350, 40, "username")
-    # password_box = TextBox(screen, 200, 241, 350, 40, "password")
-    # p1 = Post(screen, 20, 100, 600, "this post is great. why do you think im over it?")
-    # p2 = Post(screen, 20, 100, 600, "i like to move it move it, she likes to move it move it, yeah this is what i like")
-    # image = pygame.image.load("images\\shoot.jpg")
-    # s = ScrollBox(screen, 20, 200, 600, 300, [image, p1, p2, p1, p2, p1, p2])
-    # x = PromptBox(screen, 200, 100, 120, "credit card payment setup")
-    # x.activate()
-    # y = TextBox(screen, 40, 50, 400, 300, "enter text")
-    # bar = write_bar(screen)
-    import datetime
-    print datetime.datetime.now().strftime("%d.%m.%Y")
+    bar = FriendsBar(screen, 0, 0)
+    bar.set_friends(["elai", "maureen", "jesus", "momo", "shlomo", "yecheskerghoma", "fucker", "maureen is annoyinggg"])
+
     while True:
         screen.fill((225, 225, 225))
 
@@ -421,7 +437,8 @@ def main():
         for event in events:
             if event.type == pygame.QUIT:
                 exit()
-        # bar.update(events)
+        screen.blit(bar.background, (0, 0))
+        bar.scroll_box.show(events)
         # screen_print(screen, "hi\nmy name is\nelai")
         # s.show(events)
         #

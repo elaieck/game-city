@@ -63,7 +63,7 @@ class ORM():
 
         res = res[0]
 
-        games_list = [(x[:2], x[2:]) for x in json.loads(res[3])]
+        games_list = [x for x in json.loads(res[3])]
 
         usr = user( str(res[0]), str(res[1]), json.loads(res[2]), games_list )
 
@@ -81,7 +81,7 @@ class ORM():
 
         res = res[0]
 
-        game_obj = game( int(res[0]), str(res[1]), float(res[2]), str(res[3]) )
+        game_obj = game(int(res[0]), str(res[1]), float(res[2]), str(res[3]))
 
         self.close_DB()
         return game_obj
@@ -137,9 +137,16 @@ class ORM():
         self.close_DB()
 
     def buy_game(self, username, game_id):
+        print "username: " + str(username)
+        print "id: " + str(game_id)
         games = self.get_user(username).games
-        games.append(game_id+datetime.datetime.now().strftime("%d.%m.%Y"))
-        sql = "UPDATE users SET games = %s WHERE name IS %s" % (games, username)
+        print "games: " + str(games)
+        game_info = str(game_id)+str(datetime.datetime.now().strftime("%d.%m.%Y"))
+        print "infp: " + str(game_info)
+        games.append(game_info)
+        games = json.dumps(games)
+        print "json: " + str(games)
+        sql = "UPDATE users SET games = \'%s\' WHERE name IS \'%s\'" % (games, username)
         self.open_DB()
         self.cursor.execute(sql)
         self.commit()
