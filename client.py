@@ -45,6 +45,9 @@ game_buttons = [
     graphics.ImageButton(screen, 37, 322, "images\shoot.jpg", "00"),
     graphics.ImageButton(screen, 379, 322, "images\shoot.jpg", "00")
 ]
+friends_bar = graphics.FriendsBar(screen, 0, 0)
+friends_button = graphics.Button(576, 25, 81, 67, "friends")
+logout_button = graphics.Button(664, 29, 52, 63, "logout")
 
 #game page
 page_background = pygame.image.load("images\game_page_background.jpg")
@@ -121,6 +124,9 @@ while True:
         for event in events:
             if event.type == pygame.QUIT:
                 exit()
+
+        if friends_button.is_pressed(events):
+            friends_bar.activate(events)
 
         screen.blit(menu_background, (0, 0))
         for game in game_buttons:

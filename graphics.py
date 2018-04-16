@@ -183,19 +183,21 @@ class ScrollBox():
         self.thumb = ImageButton(self.screen, self.x+self.width - 47, self.y, "images/glow.png", "scroll position")
 
     def show(self, events):
-        # pygame.draw.rect(self.screen, (255, 255, 0), (self.x, self.y, self.width, self.height))
         sur_x = self.x + self.margin
         sur_y = self.y + self.margin
         scroll_height = self.scroll_bar_rect[3]
         scroll_y = self.scroll_bar_rect[1]
-        sur = pygame.Surface((self.width, self.height), pygame.SRCALPHA, 32).convert_alpha()
+
+        sur = pygame.Surface((self.x+self.width, self.y+self.height), pygame.SRCALPHA, 32)
+
         for surface in self.surfaces:
             if type(surface) is pygame.Surface:
                 showed_y = int(sur_y - float(self.scroll_pos) / scroll_height * (self.get_dept()-self.height))
-                self.screen.blit(surface, (sur_x, showed_y))
+                sur.blit(surface, (sur_x, showed_y))
                 sur_y += surface.get_height() + self.margin
             else:
                 surface.set_position(sur_x, int(sur_y - float(self.scroll_pos) / scroll_height * (self.get_dept()-self.height)))
+                surface.screen = sur
                 surface.show()
                 sur_y += surface.get_height() + self.margin
 
@@ -354,15 +356,38 @@ class WritePostBar():
 
 class FriendsBar():
 
-    def __init__(self, screen, x, y):
+    def __init__(self, screen, x, y, friends=[]):
+        self.x = x
+        self.y = y
+        self.screen = screen
         self.background = pygame.image.load("images\\friends.png")
-        self.scroll_box = ScrollBox(screen, x, 100, self.background.get_width(), self.background.get_height()-100)
-        self.friends = []
+        self.width = self.background.get_width()
+        self.height = self.background.get_height()
+        self.scroll_box = ScrollBox(screen, self.x, self.y+100, self.width, self.height-100)
+        self.friends = friends
 
     def set_friends(self, friends_list):
         self.friends = friends_list
-        self.scroll_box.surfaces = [DrawButton(self.scroll_box.screen, 0, 0, 210, 40, PURPLE, friend, GREEN, GREEN)
+        self.scroll_box.surfaces = [DrawButton(self.scroll_box.screen, self.x, self.y, 210, 40, PURPLE, friend, GREEN, GREEN)
                                     for friend in friends_list]
+
+    def is_in(self):
+        x_mouse, y_mouse = pygame.mouse.get_pos()
+        return self.x<x_mouse<int(self.x+self.width) and self.y<y_mouse<int(self.y+self.height)
+
+    def activate(self):
+        while True:
+            events = pygame.event.get()
+            for event in events:
+                if event.type == pygame.QUIT:
+                    exit()
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    break
+            self.screen.blit(self.background, (self.x,self.y))
+            self.scroll_box.show(events)
+            pygame.display.flip()
+
+
 
 
 
@@ -427,8 +452,8 @@ def main():
     screen = pygame.display.set_mode((750, 538))
     clock = pygame.time.Clock()
 
-    bar = FriendsBar(screen, 0, 0)
-    bar.set_friends(["elai", "maureen", "jesus", "momo", "shlomo", "yecheskerghoma", "fucker", "maureen is annoyinggg"])
+    bar = FriendsBar(screen, 80, 0)
+    bar.set_friends(["elai", "maureen", "jesus", "momo", "shlomo", "yecheskerghoma", "fucker", "maureen is annoyinggg", "f", "f", "sf", "Sd"])
 
     while True:
         screen.fill((225, 225, 225))
@@ -437,9 +462,7 @@ def main():
         for event in events:
             if event.type == pygame.QUIT:
                 exit()
-        screen.blit(bar.background, (0, 0))
-        bar.scroll_box.show(events)
-        # screen_print(screen, "hi\nmy name is\nelai")
+        bar.activate()
         # s.show(events)
         #
         # background = pygame.image.load("authen.jpg")
