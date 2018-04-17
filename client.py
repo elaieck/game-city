@@ -46,6 +46,7 @@ game_buttons = [
     graphics.ImageButton(screen, 379, 322, "images\shoot.jpg", "00")
 ]
 friends_bar = graphics.FriendsBar(screen, 0, 0)
+friends_bar.set_friends(["elai", "maureen", "jesus", "momo", "shlomo", "yecheskerghoma", "fucker", "maureen is annoyinggg", "f", "f", "sf", "Sd"])
 friends_button = graphics.Button(576, 25, 81, 67, "friends")
 logout_button = graphics.Button(664, 29, 52, 63, "logout")
 
@@ -125,8 +126,16 @@ while True:
             if event.type == pygame.QUIT:
                 exit()
 
+        tod = []
         if friends_button.is_pressed(events):
-            friends_bar.activate(events)
+            tod = []
+            tod = friends_bar.activate()
+
+
+        for i in tod:
+            for j in events:
+                if j.type == i.type:
+                    events.remove(j)
 
         screen.blit(menu_background, (0, 0))
         for game in game_buttons:

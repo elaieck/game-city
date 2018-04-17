@@ -66,7 +66,7 @@ class Button():
 
     def is_pressed(self, events):
         for event in events:
-            if event.type == pygame.MOUSEBUTTONDOWN and self.is_in():
+            if event.type == pygame.MOUSEBUTTONUP and self.is_in():
                 return True
         return False
 
@@ -188,8 +188,8 @@ class ScrollBox():
         scroll_height = self.scroll_bar_rect[3]
         scroll_y = self.scroll_bar_rect[1]
 
-        sur = pygame.Surface((self.x+self.width, self.y+self.height), pygame.SRCALPHA, 32)
-
+        sur = pygame.Surface((abs(self.x+self.width), abs(self.y+self.height)), pygame.SRCALPHA, 32)
+        self.thumb.screen = sur
         for surface in self.surfaces:
             if type(surface) is pygame.Surface:
                 showed_y = int(sur_y - float(self.scroll_pos) / scroll_height * (self.get_dept()-self.height))
@@ -202,7 +202,7 @@ class ScrollBox():
                 sur_y += surface.get_height() + self.margin
 
         # self.scroll_bar.show()
-        pygame.draw.rect(self.screen, (255, 255, 255), self.scroll_bar_rect)
+        pygame.draw.rect(sur, (255, 255, 255), self.scroll_bar_rect)
         dept = self.get_dept()
         # if dept > self.height:
         press_y = pygame.mouse.get_pos()[1]
@@ -340,7 +340,7 @@ class WritePostBar():
                     text = self.text_box.get_text()
                     self.text_box.clear()
                     return text
-                elif not self.text_box.is_in() and event.type == pygame.MOUSEBUTTONDOWN:
+                elif not self.text_box.is_in() and event.type == pygame.MOUSEBUTTONUP:
                     self.activated = False
             pygame.draw.rect(self.screen, (255, 255, 255), (0, 300, 625, 238))
             self.text_box.update(events)
@@ -365,6 +365,7 @@ class FriendsBar():
         self.height = self.background.get_height()
         self.scroll_box = ScrollBox(screen, self.x, self.y+100, self.width, self.height-100)
         self.friends = friends
+        self.clock = pygame.time.Clock()
 
     def set_friends(self, friends_list):
         self.friends = friends_list
@@ -376,16 +377,33 @@ class FriendsBar():
         return self.x<x_mouse<int(self.x+self.width) and self.y<y_mouse<int(self.y+self.height)
 
     def activate(self):
-        while True:
+        done = False
+        sprite_offset = -self.width
+        while not done:
             events = pygame.event.get()
+            to_remove = []
             for event in events:
                 if event.type == pygame.QUIT:
                     exit()
-                elif event.type == pygame.MOUSEBUTTONDOWN:
-                    break
-            self.screen.blit(self.background, (self.x,self.y))
+                elif event.type == pygame.MOUSEBUTTONUP and not self.is_in():
+                    print events
+                    to_remove.append(event)
+                    done = True
+
+                    return to_remove
+
+
+            if sprite_offset < 0:
+                sprite_offset += 10
+
+
+            self.screen.blit(self.background, (self.x + sprite_offset, self.y))
+            self.scroll_box.x = sprite_offset
             self.scroll_box.show(events)
             pygame.display.flip()
+            self.clock.tick(100)
+
+
 
 
 
