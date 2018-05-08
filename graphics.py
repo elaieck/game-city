@@ -59,14 +59,22 @@ class Button():
         self.width = width
         self.height = height
         self.description = description
+        self.released = True
 
     def is_in(self):
         x_mouse, y_mouse = pygame.mouse.get_pos()
-        return self.x<x_mouse<int(self.x+self.width) and self.y<y_mouse<int(self.y+self.height)
+        return self.x < x_mouse < int(self.x+self.width) and self.y < y_mouse < int(self.y+self.height)
 
     def is_pressed(self, events):
         for event in events:
-            if event.type == pygame.MOUSEBUTTONUP and self.is_in():
+            if event.type == pygame.MOUSEBUTTONDOWN and self.is_in():
+                self.released = False
+                return False
+            elif event.type == pygame.MOUSEBUTTONUP and not self.is_in() and not self.released:
+                self.released = True
+                return False
+            if event.type == pygame.MOUSEBUTTONUP and self.is_in() and not self.released:
+                self.released = True
                 return True
         return False
 
@@ -366,6 +374,7 @@ class FriendsBar():
         self.scroll_box = ScrollBox(screen, self.x, self.y+100, self.width, self.height-100)
         self.friends = friends
         self.clock = pygame.time.Clock()
+        self.released = True
 
     def set_friends(self, friends_list):
         self.friends = friends_list
@@ -374,23 +383,42 @@ class FriendsBar():
 
     def is_in(self):
         x_mouse, y_mouse = pygame.mouse.get_pos()
-        return self.x<x_mouse<int(self.x+self.width) and self.y<y_mouse<int(self.y+self.height)
+        return self.x < x_mouse < int(self.x+self.width) and self.y < y_mouse < int(self.y+self.height)
+
+    def in_scroll_box(self):
+        x_mouse, y_mouse = pygame.mouse.get_pos()
+        x = self.scroll_box.x
+        y = self.scroll_box.y
+        width = self.scroll_box.width
+        height = self.scroll_box.height
+        return x < x_mouse < int(x + width) and y < y_mouse < int(y + height)
+
+    def is_pressed_out(self, events):
+        for event in events:
+            if event.type == pygame.MOUSEBUTTONDOWN and not self.is_in():
+                self.released = False
+                return False
+            elif event.type == pygame.MOUSEBUTTONUP and self.is_in() and not self.released:
+                self.released = True
+                return False
+            if event.type == pygame.MOUSEBUTTONUP and not self.is_in() and not self.released:
+                self.released = True
+                return True
+        return False
 
     def activate(self):
-        done = False
         sprite_offset = -self.width
-        while not done:
+        while True:
             events = pygame.event.get()
-            to_remove = []
             for event in events:
                 if event.type == pygame.QUIT:
                     exit()
-                elif event.type == pygame.MOUSEBUTTONUP and not self.is_in():
-                    print events
-                    to_remove.append(event)
-                    done = True
+                elif self.is_pressed_out(events):
+                    return None
 
-                    return to_remove
+            for button in self.scroll_box.surfaces:
+                if button.is_pressed(events) and self.in_scroll_box():
+                    return button.description
 
 
             if sprite_offset < 0:

@@ -6,6 +6,7 @@ import pickle
 import subprocess
 import datetime
 import threading
+import multiprocessing
 
 pygame.init()
 screen_width = 750
@@ -62,12 +63,24 @@ page_bought_message = graphics.DialogBox(screen, 195, 123, "you already purchase
 page_need_to_buy = graphics.DialogBox(screen, 195, 123, "you have to purchase this game")
 
 
+def chat_server():
+    chat_sock = socket.socket()
+    chat_sock.bind(("0.0.0.0", 3001))
+    chat_sock.listen(10)
+    while True:
+        cli_s, addr = chat_sock.accept()
+        t = threading.Thread(target=chat_manage, args=(cli_s,))
+        t.start()
+    pass
 
+
+def chat_manage():
+    pass
 
 current_screen = "login"
 while True:
 
-    while current_screen == "login":
+    while current_screen == "login":    #==========================================================================
         events = pygame.event.get()
         for event in events:
             if event.type == pygame.QUIT:
@@ -95,7 +108,7 @@ while True:
 
         pygame.display.flip()
 
-    while current_screen == "signup":
+    while current_screen == "signup":   #==========================================================================
         events = pygame.event.get()
         for event in events:
             if event.type == pygame.QUIT:
@@ -120,22 +133,20 @@ while True:
 
         pygame.display.flip()
 
-    while current_screen == "menu":
+    while current_screen == "menu":     #==========================================================================
+        t = multiprocessing.Process(target=chat_server)
+        t.start()
+
         events = pygame.event.get()
         for event in events:
             if event.type == pygame.QUIT:
                 exit()
 
-        tod = []
         if friends_button.is_pressed(events):
-            tod = []
-            tod = friends_bar.activate()
+            chat_friend = friends_bar.activate()
+            if chat_friend is not None:
+                subprocess.Popen(["python", "friends_window.py"])
 
-
-        for i in tod:
-            for j in events:
-                if j.type == i.type:
-                    events.remove(j)
 
         screen.blit(menu_background, (0, 0))
         for game in game_buttons:
@@ -158,10 +169,10 @@ while True:
                          for post in posts_info[::-1]]
 
                 page_scroll_box.surfaces = [game_image] + [play_button] + [buy_button] + posts
-                # subprocess.Popen(["python", "shoot\\server.py"])
+                subprocess.Popen(["python", "shoot\\server.py"])
         pygame.display.flip()
 
-    while current_screen == "game_page":
+    while current_screen == "game_page":    #==========================================================================
         events = pygame.event.get()
         for event in events:
             if event.type == pygame.QUIT:

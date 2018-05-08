@@ -14,6 +14,7 @@ srv_sock.listen(10)
 threads = []
 game_is_open = False
 
+messages = []
 
 def parts(message):
     return message.split("~")
@@ -49,49 +50,61 @@ def send_game_info(sock, game):
     str_posts = pickle.dumps(posts)
     sock.send("GPOSTS~" + str_posts)
 
+
 def game_bought(game_id, username):
     purchased_games_info = db.get_user(username).games
     purchased_games = [game_info[:2] for game_info in purchased_games_info]
     return game_id in purchased_games
 
 
+def check_messages(name):
+    for msg in messages:
+        if msg[0] == name:
+            messages.remove(msg)
+            return [msg[1], msg[2]]
+    return None
 
 def server(sock):
+
     while True:
         user = get_authen(sock)
         if user is not None:
             break
     while True:
-        info = parts(sock.recv(1024))
-        action = info[0]
-        if action == "":
-            break
-        elif action == "CHSGM":
-            game = db.get_game(info[1])
-            send_game_info(sock, game)
-        elif action == "POST":
-            db.insert_new_post(int(info[1]), info[2], user.name, info[3])
-        elif action == "PLAY":
-            if game_bought(info[1], user.name):
-                sock.send("approved")
-            else:
-
-                sock.send("BUYPLZ")
-        elif action == "BUY":
-            if game_bought(info[1], user.name):
-                sock.send("ALBUY")
-            else:
-                db.buy_game(user.name, info[1])
-                sock.send("BUYSUC")
-
-
+        sock.settimeout(1)
+        try:
+            info = parts(sock.recv(1024))
+            action = info[0]
+            if action == "":
+                break
+            elif action == "CHSGM":
+                game = db.get_game(info[1])
+                send_game_info(sock, game)
+            elif action == "POST":
+                db.insert_new_post(int(info[1]), info[2], user.name, info[3])
+            elif action == "PLAY":
+                if game_bought(info[1], user.name):
+                    sock.send("approved")
+                else:
+                    sock.send("BUYPLZ")
+            elif action == "BUY":
+                if game_bought(info[1], user.name):
+                    sock.send("ALBUY")
+                else:
+                    db.buy_game(user.name, info[1])
+                    sock.send("BUYSUC")
+            elif action == "SNDMSG":
+                messages.append([info[1], user.name, info[2]])
+            found = check_messages()
+            if found:
+                sock.send("GOTMSG~%s~%s" % (found[0], found[1]))
+        except:
+            print "got"
 
 
 
 # while True:
     #     data = sock.recv(1024)
-
-
 
 subprocess.Popen(["python", "shoot\\server.py"])
 while True:
