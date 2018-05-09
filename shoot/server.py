@@ -5,7 +5,7 @@ from shooter import Shooter
 
 srv_sock = socket.socket()
 ip = "0.0.0.0" # means local
-port = 60001
+port = 3001
 srv_sock.bind((ip, port))
 srv_sock.listen(10)
 

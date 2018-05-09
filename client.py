@@ -6,7 +6,8 @@ import pickle
 import subprocess
 import datetime
 import threading
-import multiprocessing
+from os import _exit
+import time
 
 pygame.init()
 screen_width = 750
@@ -14,10 +15,12 @@ screen_height = 538
 screen = pygame.display.set_mode((screen_width, screen_height))
 clock = pygame.time.Clock()
 
+done = False
+bye = False
 
 sock = socket.socket()
 ip = "127.0.0.1"    # means local
-port = 60000
+port = 59567
 sock.connect((ip, port))
 
 shoot_image = pygame.image.load("images\shoot_image.jpg")
@@ -62,20 +65,41 @@ page_buy_prompt = graphics.PromptBox(screen, 195, 123, 30, "Credit Card Details"
 page_bought_message = graphics.DialogBox(screen, 195, 123, "you already purchased this game")
 page_need_to_buy = graphics.DialogBox(screen, 195, 123, "you have to purchase this game")
 
+messages = []
+threads = []
+
 
 def chat_server():
     chat_sock = socket.socket()
-    chat_sock.bind(("0.0.0.0", 3001))
+    chat_sock.bind(("0.0.0.0", 61002))
     chat_sock.listen(10)
     while True:
         cli_s, addr = chat_sock.accept()
         t = threading.Thread(target=chat_manage, args=(cli_s,))
         t.start()
-    pass
+        threads.append(t)
 
 
-def chat_manage():
-    pass
+def chat_manage(chat):
+    friend = chat.recv(1024)
+    while True:
+        if chat.recv(1024) == "CHTMSG":
+            to_send = "=%#nothing#%="
+            for msg in messages:
+                if msg[0] == friend:
+                    to_send = msg[1]
+                    messages.remove(msg)
+                    break
+            chat.send(to_send)
+
+
+
+def check_new_message():
+    sock.send("GETMSG")
+    data = sock.recv(10111)
+    if data != "NOMSG":
+        data = data.split("~")
+        messages.append([data[1], data[2]])
 
 current_screen = "login"
 while True:
@@ -101,7 +125,8 @@ while True:
             recv = sock.recv(3)
             if recv == "LOS":
                 current_screen = "menu"
-                # subprocess.Popen(["python", "friends_window.py"])
+                t = threading.Thread(target=chat_server)
+                t.start()
             else:
                 print "FAILED LOGIN :("
                 login_error_box.activate()
@@ -112,6 +137,7 @@ while True:
         events = pygame.event.get()
         for event in events:
             if event.type == pygame.QUIT:
+                done = True
                 exit()
 
         screen.blit(signup_background, (0, 0))
@@ -134,18 +160,18 @@ while True:
         pygame.display.flip()
 
     while current_screen == "menu":     #==========================================================================
-        t = multiprocessing.Process(target=chat_server)
-        t.start()
-
         events = pygame.event.get()
         for event in events:
             if event.type == pygame.QUIT:
-                exit()
+                done = True
+                _exit(1)
+
+        check_new_message()
 
         if friends_button.is_pressed(events):
             chat_friend = friends_bar.activate()
             if chat_friend is not None:
-                subprocess.Popen(["python", "friends_window.py"])
+                subprocess.Popen(["python", "friends_window.py", username, chat_friend])
 
 
         screen.blit(menu_background, (0, 0))
@@ -161,22 +187,23 @@ while True:
                 game_name = game_info[1]
                 game_price = game_info[2]
                 game_image = pygame.image.load("images\\"+game_name+"_image.jpg")
-                print data[1]
                 posts_info = pickle.loads(data[1])
                 play_button = graphics.DrawButton(screen, 0, 0, 120, 36, (137, 255, 223), "PLAY NOW")
                 buy_button = graphics.DrawButton(screen, 0, 0, 120, 36, (137, 255, 223), "BUY - " + game_price)
                 posts = [graphics.Post(screen, 0, 0, screen_width - 80, post.username, post.content)
                          for post in posts_info[::-1]]
-
                 page_scroll_box.surfaces = [game_image] + [play_button] + [buy_button] + posts
-                subprocess.Popen(["python", "shoot\\server.py"])
+
         pygame.display.flip()
 
     while current_screen == "game_page":    #==========================================================================
         events = pygame.event.get()
         for event in events:
             if event.type == pygame.QUIT:
-                exit()
+                done = True
+                _exit(1)
+
+        check_new_message()
 
         if page_back_button.is_pressed(events):
             current_screen = "menu"
@@ -185,6 +212,7 @@ while True:
             sock.send("PLAY~"+game_id)
             answer = sock.recv(1024)
             if answer == "approved":
+                subprocess.Popen(["python", "shoot\\server.py"])
                 subprocess.Popen(["python", "shoot\\client.py"])
             else:
                 page_need_to_buy.activate()

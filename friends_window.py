@@ -1,6 +1,8 @@
 import pygame
 import graphics
 import socket
+from sys import argv
+import time
 
 window_width = 750
 window_height = 538
@@ -8,7 +10,8 @@ window = pygame.display.set_mode((window_width, window_height))
 friends_background = pygame.image.load("images\\friends.png")
 font = pygame.font.SysFont('', 30)
 online = True
-username = "elaieck"
+username = argv[1]
+friend = argv[2]
 GREEN = (137, 255, 223)
 GREY = (127, 127, 127)
 
@@ -18,6 +21,9 @@ text_box = graphics.TextBox(window, 0, window_height/2, window_width-100, window
 button = graphics.DrawButton(window, window_width-100, window_height/2, 100, window_height/2, (0, 255, 255), "send")
 
 sock = socket.socket()
+ip = "127.0.0.1"    # means local
+port = 61002
+sock.connect((ip, port))
 
 def to_surface(message):
     if type(message) is tuple:
@@ -43,17 +49,19 @@ def to_surface(message):
     
     return surface
 
-# def show_messages(screen):
-#
-#     for i in range(len(messages)):
-#         text = font.render(messages[i], True, (0, 0, 0))
-#         screen.blit(text, (10, 10 + i * 30))
 
 def main():
-
+    # print "friend", str(friend)
+    sock.send(friend)
+    time.sleep(1)
     while True:
+        sock.send("CHTMSG")
+        message = sock.recv(10100)
+        if message != "=%#nothing#%=":
+            messages.append((friend, message))
         window.fill((200, 200, 200))
         events = pygame.event.get()
+
         for event in events:
             if event.type == pygame.QUIT:
                 exit()
@@ -71,6 +79,7 @@ def main():
         text_box.update(events)
         button.show()
         pygame.display.flip()
+
 
 
 

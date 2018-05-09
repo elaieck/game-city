@@ -8,13 +8,13 @@ import subprocess
 db = ORM()
 srv_sock = socket.socket()
 ip = "0.0.0.0" # means local
-port = 60000
+port = 59567
 srv_sock.bind((ip, port))
 srv_sock.listen(10)
 threads = []
 game_is_open = False
 
-messages = []
+messages = [["", "momo", "hello"], ["", "momo", "my name is momo"]]
 
 def parts(message):
     return message.split("~")
@@ -71,7 +71,7 @@ def server(sock):
         if user is not None:
             break
     while True:
-        sock.settimeout(1)
+        # sock.settimeout(0.2)
         try:
             info = parts(sock.recv(1024))
             action = info[0]
@@ -95,18 +95,27 @@ def server(sock):
                     sock.send("BUYSUC")
             elif action == "SNDMSG":
                 messages.append([info[1], user.name, info[2]])
-            found = check_messages()
-            if found:
-                sock.send("GOTMSG~%s~%s" % (found[0], found[1]))
-        except:
-            print "got"
+            elif action == "GETMSG":
+                found = check_messages(user.name)
+                if found:
+                    sock.send("GOTMSG~%s~%s" % (found[0], found[1]))
+                else:
+                    sock.send("NOMSG")
+        except socket.timeout:
+            pass
+
+        # found = check_messages(user.name)
+        # if found:
+        #     sock.send("GOTMSG~%s~%s" % (found[0], found[1]))
+        # else :
+        #     sock.send("NOMSG")
 
 
 
 # while True:
     #     data = sock.recv(1024)
 
-subprocess.Popen(["python", "shoot\\server.py"])
+# subprocess.Popen(["python", "shoot\\server.py"])
 while True:
     cli_s, addr = srv_sock.accept()
     t = threading.Thread(target=server, args=(cli_s,))
