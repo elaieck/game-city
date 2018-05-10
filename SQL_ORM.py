@@ -153,8 +153,23 @@ class ORM():
         self.close_DB()
 
     def attach_friends(self, friend1, friend2):
+        if friend1 == friend2:
+            return
+        friends_list = self.get_user(friend1).friends
+        if friend2 not in friends_list:
+            friends_list.append(friend2)
+        sql = "UPDATE users SET friends = \'%s\' WHERE name IS \'%s\'" % (json.dumps(friends_list), friend1)
         self.open_DB()
+        self.cursor.execute(sql)
+        self.commit()
+        self.close_DB()
 
+        friends_list = self.get_user(friend2).friends
+        if friend1 not in friends_list:
+            friends_list.append(friend1)
+        sql = "UPDATE users SET friends = \'%s\' WHERE name IS \'%s\'" % (json.dumps(friends_list), friend2)
+        self.open_DB()
+        self.cursor.execute(sql)
         self.commit()
         self.close_DB()
 

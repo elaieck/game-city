@@ -14,7 +14,7 @@ srv_sock.listen(10)
 threads = []
 game_is_open = False
 
-messages = [["", "momo", "hello"], ["", "momo", "my name is momo"]]
+messages = []
 
 def parts(message):
     return message.split("~")
@@ -71,38 +71,46 @@ def server(sock):
         if user is not None:
             break
     while True:
-        # sock.settimeout(0.2)
-        try:
             info = parts(sock.recv(1024))
             action = info[0]
             if action == "":
                 break
+
             elif action == "CHSGM":
                 game = db.get_game(info[1])
                 send_game_info(sock, game)
+
             elif action == "POST":
                 db.insert_new_post(int(info[1]), info[2], user.name, info[3])
+
             elif action == "PLAY":
                 if game_bought(info[1], user.name):
                     sock.send("approved")
                 else:
                     sock.send("BUYPLZ")
+
             elif action == "BUY":
                 if game_bought(info[1], user.name):
                     sock.send("ALBUY")
                 else:
                     db.buy_game(user.name, info[1])
                     sock.send("BUYSUC")
+
             elif action == "SNDMSG":
                 messages.append([info[1], user.name, info[2]])
+
             elif action == "GETMSG":
                 found = check_messages(user.name)
                 if found:
                     sock.send("GOTMSG~%s~%s" % (found[0], found[1]))
                 else:
                     sock.send("NOMSG")
-        except socket.timeout:
-            pass
+
+            elif action == "ADDFRND":
+                db.attach_friends(user.name, info[1])
+
+            elif action == "GETFRNDS":
+                sock.send("FRNDS~" + "~".join(db.get_user(user.name).friends))
 
         # found = check_messages(user.name)
         # if found:

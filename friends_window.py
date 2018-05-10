@@ -66,12 +66,16 @@ def main():
             if event.type == pygame.QUIT:
                 exit()
 
+        msg_to_send = "=%#nothing#%="
         if button.is_pressed(events):
             if online:
+                msg_to_send = text_box.get_text()
                 messages.append((username, text_box.get_text()))
                 text_box.clear()
             else:
                 messages.append("Your friend is not online")
+        sock.send(msg_to_send)
+        sock.recv(2)
 
         chat_box.surfaces = [to_surface(x) for x in messages]
         chat_box.show(events)

@@ -1,5 +1,6 @@
 import pygame
 import pygame_textinput
+from os import _exit
 
 VIOLET = (146, 144, 244)
 PURPLE = (17, 22, 78)
@@ -101,6 +102,8 @@ class ImageButton(Button):
     def show(self):
         self.screen.blit(self.image, (self.x, self.y))
 
+    def set_screen(self, screen):
+        self.screen = screen
 
 class DrawButton(Button):
     def __init__(self, screen,  x, y, width, height, color, text="", text_color=(255, 255, 255), stroke_color=None):
@@ -119,6 +122,9 @@ class DrawButton(Button):
         self.screen.blit(text, (self.x + (self.width - text.get_width()) / 2,
                                 self.y + (self.height - text.get_height()) / 2))
 
+    def set_screen(self, screen):
+        self.screen = screen
+
 
 class DialogBox():
     def __init__(self, screen, x, y, text):
@@ -136,7 +142,7 @@ class DialogBox():
             events = pygame.event.get()
             for event in events:
                 if event.type == pygame.QUIT:
-                    exit()
+                    _exit(1)
             self.screen.blit(self.box, (self.x, self.y))
             font = pygame.font.SysFont('', 24)
             text = font.render(self.text, True, (120, 221, 213))
@@ -159,7 +165,7 @@ class PromptBox(DialogBox):
             events = pygame.event.get()
             for event in events:
                 if event.type == pygame.QUIT:
-                    exit()
+                    _exit(1)
             self.screen.blit(self.box, (self.x, self.y))
             font = pygame.font.SysFont('', 24)
             text = font.render(self.text, True, (120, 221, 213))
@@ -205,14 +211,12 @@ class ScrollBox():
                 sur_y += surface.get_height() + self.margin
             else:
                 surface.set_position(sur_x, int(sur_y - float(self.scroll_pos) / scroll_height * (self.get_dept()-self.height)))
-                surface.screen = sur
-                surface.show()
+                surface.set_screen(sur)
                 sur_y += surface.get_height() + self.margin
+                surface.show()
 
-        # self.scroll_bar.show()
+
         pygame.draw.rect(sur, (255, 255, 255), self.scroll_bar_rect)
-        dept = self.get_dept()
-        # if dept > self.height:
         press_y = pygame.mouse.get_pos()[1]
         for event in events:
             if event.type == pygame.MOUSEBUTTONDOWN and self.thumb.is_in():
@@ -327,6 +331,10 @@ class Post():
         self.friend_button.y = y + self.padding
         self.friend_button.x = self.x + self.width - self.friend_button.width - self.padding
 
+    def set_screen(self, screen):
+        self.screen = screen
+        self.friend_button.screen = screen
+
 
 class WritePostBar():
     def __init__(self, screen):
@@ -342,7 +350,7 @@ class WritePostBar():
             events = pygame.event.get()
             for event in events:
                 if event.type == pygame.QUIT:
-                    exit()
+                    _exit(1)
                 elif self.post_button.is_pressed(events):
                     self.activated = False
                     text = self.text_box.get_text()
@@ -412,7 +420,7 @@ class FriendsBar():
             events = pygame.event.get()
             for event in events:
                 if event.type == pygame.QUIT:
-                    exit()
+                    _exit(1)
                 elif self.is_pressed_out(events):
                     return None
 
@@ -497,7 +505,7 @@ def main():
     pygame.init()
     screen = pygame.display.set_mode((750, 538))
     clock = pygame.time.Clock()
-
+    post = Post(screen, 20, 300, 500, "me", "heloooooooo")
     bar = FriendsBar(screen, 80, 0)
     bar.set_friends(["elai", "maureen", "jesus", "momo", "shlomo", "yecheskerghoma", "fucker", "maureen is annoyinggg", "f", "f", "sf", "Sd"])
 
@@ -507,8 +515,9 @@ def main():
         events = pygame.event.get()
         for event in events:
             if event.type == pygame.QUIT:
-                exit()
-        bar.activate()
+                _exit(1)
+        # bar.activate()
+        post.show()
         # s.show(events)
         #
         # background = pygame.image.load("authen.jpg")

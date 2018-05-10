@@ -7,7 +7,6 @@ import subprocess
 import datetime
 import threading
 from os import _exit
-import time
 
 pygame.init()
 screen_width = 750
@@ -50,7 +49,6 @@ game_buttons = [
     graphics.ImageButton(screen, 379, 322, "images\shoot.jpg", "00")
 ]
 friends_bar = graphics.FriendsBar(screen, 0, 0)
-friends_bar.set_friends(["elai", "maureen", "jesus", "momo", "shlomo", "yecheskerghoma", "fucker", "maureen is annoyinggg", "f", "f", "sf", "Sd"])
 friends_button = graphics.Button(576, 25, 81, 67, "friends")
 logout_button = graphics.Button(664, 29, 52, 63, "logout")
 
@@ -67,7 +65,7 @@ page_need_to_buy = graphics.DialogBox(screen, 195, 123, "you have to purchase th
 
 messages = []
 threads = []
-
+messages_to_send = []
 
 def chat_server():
     chat_sock = socket.socket()
@@ -83,7 +81,10 @@ def chat_server():
 def chat_manage(chat):
     friend = chat.recv(1024)
     while True:
-        if chat.recv(1024) == "CHTMSG":
+        recv = chat.recv(1024)
+        if recv == "":
+            break
+        elif recv == "CHTMSG":
             to_send = "=%#nothing#%="
             for msg in messages:
                 if msg[0] == friend:
@@ -91,6 +92,12 @@ def chat_manage(chat):
                     messages.remove(msg)
                     break
             chat.send(to_send)
+        msg = chat.recv(10100)
+        if msg == "":
+            break
+        elif msg != "=%#nothing#%=":
+            messages_to_send.append((friend, msg))
+        chat.send("ok")
 
 
 
@@ -100,15 +107,22 @@ def check_new_message():
     if data != "NOMSG":
         data = data.split("~")
         messages.append([data[1], data[2]])
+    if len(messages_to_send) != 0:
+        sock.send("SNDMSG~%s~%s" % (messages_to_send[0][0], messages_to_send[0][1]))
+        messages_to_send.pop(0)
+
+def do_events():
+    events = pygame.event.get()
+    for event in events:
+        if event.type == pygame.QUIT:
+            _exit(1)
+    return events
 
 current_screen = "login"
 while True:
 
     while current_screen == "login":    #==========================================================================
-        events = pygame.event.get()
-        for event in events:
-            if event.type == pygame.QUIT:
-                exit()
+        events = do_events()
 
         screen.blit(login_background, (0, 0))
         login_username_box.update(events)
@@ -134,11 +148,7 @@ while True:
         pygame.display.flip()
 
     while current_screen == "signup":   #==========================================================================
-        events = pygame.event.get()
-        for event in events:
-            if event.type == pygame.QUIT:
-                done = True
-                exit()
+        events = events = do_events()
 
         screen.blit(signup_background, (0, 0))
         signup_username_box.update(events)
@@ -160,15 +170,14 @@ while True:
         pygame.display.flip()
 
     while current_screen == "menu":     #==========================================================================
-        events = pygame.event.get()
-        for event in events:
-            if event.type == pygame.QUIT:
-                done = True
-                _exit(1)
+        events = events = do_events()
 
         check_new_message()
 
         if friends_button.is_pressed(events):
+            sock.send("GETFRNDS")
+            friends23 = sock.recv(1024)
+            print friends23
             chat_friend = friends_bar.activate()
             if chat_friend is not None:
                 subprocess.Popen(["python", "friends_window.py", username, chat_friend])
@@ -197,11 +206,7 @@ while True:
         pygame.display.flip()
 
     while current_screen == "game_page":    #==========================================================================
-        events = pygame.event.get()
-        for event in events:
-            if event.type == pygame.QUIT:
-                done = True
-                _exit(1)
+        events = events = do_events()
 
         check_new_message()
 
@@ -226,8 +231,15 @@ while True:
             else:
                 page_buy_prompt.activate()
 
+        for surface in page_scroll_box.surfaces:
+            if surface.__class__ == graphics.Post:
+                if surface.friend_button.is_pressed(events):
+                    print "press"
+                    sock.send("ADDFRND~"+surface.user)
+
         screen.blit(page_background, (0, 0))
         page_scroll_box.show(events)
+        page_scroll_box.surfaces[3].show()
         screen.blit(page_bar, (0, 0))
         post_content = page_write_post.update(events)
         if post_content != "":
