@@ -134,6 +134,7 @@ class DialogBox():
         self.text = text
         self.box = pygame.image.load("images\dialog.png").convert_alpha()
         self.ok_button = Button(x+99, y+200, 120, 36)
+        self.x_button = Button(x, y, 40, 40)
         self.activated = False
 
 
@@ -148,7 +149,9 @@ class DialogBox():
             text = font.render(self.text, True, (120, 221, 213))
             self.screen.blit(text, (int(self.x+self.box.get_width()/2-text.get_width()/2), self.y+40))
             if self.ok_button.is_pressed(events):
-                break
+                return True
+            elif self.x_button.is_pressed(events):
+                return False
             pygame.display.flip()
 
 

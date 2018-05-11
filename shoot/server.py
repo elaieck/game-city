@@ -3,9 +3,10 @@ import json
 import thread
 from shooter import Shooter
 
+print "NOOOOOOOOOOOOOOOOO"
 srv_sock = socket.socket()
 ip = "0.0.0.0" # means local
-port = 3001
+port = 61234
 srv_sock.bind((ip, port))
 srv_sock.listen(10)
 

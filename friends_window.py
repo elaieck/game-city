@@ -18,12 +18,15 @@ GREY = (127, 127, 127)
 messages = []
 chat_box = graphics.ScrollBox(window, 0, 0, window_width, window_height/2, margin=5)
 text_box = graphics.TextBox(window, 0, window_height/2, window_width-100, window_height/2, "enter message")
-button = graphics.DrawButton(window, window_width-100, window_height/2, 100, window_height/2, (0, 255, 255), "send")
+send_button = graphics.DrawButton(window, window_width-100, window_height/2, 100, window_height/2-50, (0, 255, 255), "send")
+invite_button = graphics.DrawButton(window, window_width-100, window_height-50, 100, 50, (0, 255, 0), "invite")
 
 sock = socket.socket()
 ip = "127.0.0.1"    # means local
-port = 61002
+port = 61005
+print 1
 sock.connect((ip, port))
+print 2
 
 def to_surface(message):
     if type(message) is tuple:
@@ -66,14 +69,16 @@ def main():
             if event.type == pygame.QUIT:
                 exit()
 
-        msg_to_send = "=%#nothing#%="
-        if button.is_pressed(events):
+        msg_to_send = "SEND~=%#nothing#%="
+        if send_button.is_pressed(events) and text_box.get_text() != "":
             if online:
-                msg_to_send = text_box.get_text()
+                msg_to_send = "SEND~" + text_box.get_text()
                 messages.append((username, text_box.get_text()))
                 text_box.clear()
             else:
                 messages.append("Your friend is not online")
+        elif invite_button.is_pressed(events):
+            msg_to_send = "INVT~00~"+friend
         sock.send(msg_to_send)
         sock.recv(2)
 
@@ -81,7 +86,8 @@ def main():
         chat_box.show(events)
         pygame.draw.rect(window, (255, 255, 255), (text_box.x, text_box.y, text_box.width, text_box.height))
         text_box.update(events)
-        button.show()
+        send_button.show()
+        invite_button.show()
         pygame.display.flip()
 
 

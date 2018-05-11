@@ -17,8 +17,11 @@ clock = pygame.time.Clock()
 done = False
 bye = False
 
+admin_ip = "127.0.0.1"
+admin_port = 61234
+
 sock = socket.socket()
-ip = "127.0.0.1"    # means local
+ip = "10.0.0.30"    # means local
 port = 59567
 sock.connect((ip, port))
 
@@ -63,13 +66,16 @@ page_buy_prompt = graphics.PromptBox(screen, 195, 123, 30, "Credit Card Details"
 page_bought_message = graphics.DialogBox(screen, 195, 123, "you already purchased this game")
 page_need_to_buy = graphics.DialogBox(screen, 195, 123, "you have to purchase this game")
 
+group = []
 messages = []
 threads = []
 messages_to_send = []
+in_group = False
+said_yes = True
 
 def chat_server():
     chat_sock = socket.socket()
-    chat_sock.bind(("0.0.0.0", 61002))
+    chat_sock.bind(("0.0.0.0", 61005))
     chat_sock.listen(10)
     while True:
         cli_s, addr = chat_sock.accept()
@@ -80,8 +86,10 @@ def chat_server():
 
 def chat_manage(chat):
     friend = chat.recv(1024)
+    print "3"
     while True:
         recv = chat.recv(1024)
+        print 4
         if recv == "":
             break
         elif recv == "CHTMSG":
@@ -95,11 +103,17 @@ def chat_manage(chat):
         msg = chat.recv(10100)
         if msg == "":
             break
-        elif msg != "=%#nothing#%=":
-            messages_to_send.append((friend, msg))
-        chat.send("ok")
+        msg = msg.split("~")
+        if msg[0] == "INVT":
+            messages_to_send.append((friend, "=%#00#%=", ))
+        elif msg[1] != "=%#nothing#%=":
+            messages_to_send.append((friend, msg[1]))
+        chat.send("OK")
 
 
+def pop_error(text):
+    error_box = graphics.DialogBox(screen, 195, 123, text)
+    return error_box.activate()
 
 def check_new_message():
     sock.send("GETMSG")
@@ -110,6 +124,16 @@ def check_new_message():
     if len(messages_to_send) != 0:
         sock.send("SNDMSG~%s~%s" % (messages_to_send[0][0], messages_to_send[0][1]))
         messages_to_send.pop(0)
+
+def check_new_requests():
+    sock.send("GETREQ")
+    data = sock.recv(1024)
+    if data != "NOREQ":
+        data = data.split("~")
+        answer = pop_error(data[1]+" wants to be your friend")
+        if answer:
+            sock.send("ADDFRND~"+data[1])
+
 
 def do_events():
     events = pygame.event.get()
@@ -150,12 +174,16 @@ while True:
     while current_screen == "signup":   #==========================================================================
         events = events = do_events()
 
+
         screen.blit(signup_background, (0, 0))
         signup_username_box.update(events)
         signup_password_box.update(events)
         signup_confirm_box.update(events)
 
         if sign_up_button.is_pressed(events):
+            if signup_password_box.get_text() != signup_confirm_box.get_text():
+                pop_error("password different than verified")
+                break
             username = signup_username_box.get_text()
             password = hashlib.md5(signup_password_box.get_text()).hexdigest()
             sock.send("SIGNUP~%s~%s" % (username, password))
@@ -163,7 +191,7 @@ while True:
             if recv == "SUS":
                 current_screen = "login"
             else:
-                print "SIGN UP FAILED :("
+                pop_error("username already exists")
         if signup_back_button.is_pressed(events):
             current_screen = "login"
 
@@ -176,11 +204,29 @@ while True:
 
         if friends_button.is_pressed(events):
             sock.send("GETFRNDS")
-            friends23 = sock.recv(1024)
-            print friends23
+            friends_list = sock.recv(1024).split("~")
+            if len(friends_list) != 1:
+                friends_bar.set_friends(friends_list[1:])
+            for friend_button in friends_bar.scroll_box.surfaces:
+                if friend_button.description in [x[0] for x in messages]:
+                    friend_button.color = (0, 255, 255)
+                    friend_button.text_color = (255, 255, 255)
+
             chat_friend = friends_bar.activate()
             if chat_friend is not None:
                 subprocess.Popen(["python", "friends_window.py", username, chat_friend])
+
+
+        sock.send("GETACPT")
+        recv = sock.recv(1024)
+        if recv != "NOACPT" and not in_group:
+            print "yessss111"
+            recv = recv.split("~")
+            in_group = True
+            group.append(recv[0])
+            subprocess.Popen(["python", "shoot\\server.py"])
+
+
 
 
         screen.blit(menu_background, (0, 0))
@@ -203,12 +249,27 @@ while True:
                          for post in posts_info[::-1]]
                 page_scroll_box.surfaces = [game_image] + [play_button] + [buy_button] + posts
 
+        sock.send("GETINVT")
+        recv = sock.recv(1024)
+        print recv
+        if recv != "NOINVT":
+            recv = recv.split("~")
+            if pop_error(recv[1]+" invited you to play"):
+                sock.send("SNDACPT~"+recv[1]+"~"+recv[2])
+                in_group = True
+                admin = recv[1]
+                admin_ip = recv[3]
+                admin_port = recv[4]
+
+        check_new_requests()
+
         pygame.display.flip()
 
     while current_screen == "game_page":    #==========================================================================
         events = events = do_events()
 
         check_new_message()
+        check_new_requests()
 
         if page_back_button.is_pressed(events):
             current_screen = "menu"
@@ -217,8 +278,7 @@ while True:
             sock.send("PLAY~"+game_id)
             answer = sock.recv(1024)
             if answer == "approved":
-                subprocess.Popen(["python", "shoot\\server.py"])
-                subprocess.Popen(["python", "shoot\\client.py"])
+                subprocess.Popen(["python", "shoot\\client.py", admin_ip])
             else:
                 page_need_to_buy.activate()
 
@@ -234,8 +294,7 @@ while True:
         for surface in page_scroll_box.surfaces:
             if surface.__class__ == graphics.Post:
                 if surface.friend_button.is_pressed(events):
-                    print "press"
-                    sock.send("ADDFRND~"+surface.user)
+                    sock.send("ASKFRND~"+surface.user)
 
         screen.blit(page_background, (0, 0))
         page_scroll_box.show(events)
