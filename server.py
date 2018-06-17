@@ -182,8 +182,8 @@ def server(sock, address):
 
                 elif action == "GETFRNDS":
                     sock.send("~".join(["FRNDS"]+db.get_user(user.name).friends))
-    except:
-        print "client disconnected"
+    except Exception as e:
+        print "client disconnected", e
 
 
 #multirheading loop

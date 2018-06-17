@@ -8,6 +8,8 @@ import datetime
 import threading
 from sys import argv
 from os import _exit
+import os
+import sys
 
 pygame.init()
 screen_width = 750
@@ -85,7 +87,6 @@ threads = []
 messages_to_send = []
 
 in_group = False
-said_yes = True
 
 def chat_server():
     #open a multiclient connection with a chat window
@@ -289,6 +290,11 @@ while True:
 
         check_new_message()
 
+        if logout_button.is_pressed(events):
+            for proc in processes:
+                proc.kill()
+            _exit(1)
+
         if friends_button.is_pressed(events):
             sock.send("GETFRNDS")
             friends_list = sock.recv(1024).split("~")
@@ -312,7 +318,7 @@ while True:
         pygame.display.flip()
 
     while current_screen == "game_page":    #=========== game page ==================
-        events = events = do_events()
+        events  = do_events()
 
         check_new_message()
         check_new_requests()
@@ -321,6 +327,9 @@ while True:
             current_screen = "menu"
 
         elif play_button.is_pressed(events):
+            if not in_group:
+                pop_error("not in group")
+                break
             sock.send("PLAY~"+game_id)
             answer = sock.recv(1024)
             if answer == "approved":
@@ -340,7 +349,7 @@ while True:
 
         for surface in page_scroll_box.surfaces:
             if surface.__class__ == graphics.Post:
-                if surface.friend_button.is_pressed(events):
+                if surface.friend_button.is_pressed(events) and surface.user != username:
                     sock.send("ASKFRND~"+surface.user)
 
         screen.blit(page_background, (0, 0))
