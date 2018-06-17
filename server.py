@@ -2,13 +2,13 @@ import socket
 import threading
 from SQL_ORM import ORM
 import pickle
-import subprocess
+from sys import argv
 
 
 db = ORM()
 srv_sock = socket.socket()
 ip = "0.0.0.0" # means local
-port = 59567
+port = int(argv[1])
 srv_sock.bind((ip, port))
 srv_sock.listen(10)
 threads = []
@@ -23,7 +23,9 @@ accepts = []
 def parts(message):
     return message.split("~")
 
-#take care of login and signup
+#takes care of logins and sign-ups:
+#login: if entered correct username and password let user continue, else notify.
+#sign up: if entered original usernamelet user continue, else notify.
 def get_authen(sock):
     data = sock.recv(1024)
     message = parts(data)
@@ -78,7 +80,7 @@ def check_messages(name):
             return [msg[1], msg[2]]
     return None
 
-#checks if user has messages
+#checks if user any user accepted to his friend requests
 def check_accepts(name):
     for acpt in accepts:
         if acpt[0] == name:
@@ -86,7 +88,7 @@ def check_accepts(name):
             return [acpt[1], acpt[2]]
     return None
 
-#checks if user has messages
+#checks if user has any friend requests
 def check_requests(name):
     for req in requests:
         if req[0] == name:
@@ -94,7 +96,9 @@ def check_requests(name):
             return req[1]
     return None
 
-#checks if user has messages
+#SERVER MAIN:
+#functions as a target to a multithreading platform
+#builted as a question-answer communication system
 def server(sock, address):
     try:
         while True:
@@ -150,7 +154,7 @@ def server(sock, address):
                 elif action == "GETREQ":
                     found = check_requests(user.name)
                     if found:
-                        sock.send("GOTREQ~%s" % (found[0]))
+                        sock.send("GOTREQ~%s" % found)
                     else:
                         sock.send("NOREQ")
 
@@ -180,18 +184,9 @@ def server(sock, address):
                     sock.send("~".join(["FRNDS"]+db.get_user(user.name).friends))
     except:
         print "client disconnected"
-        # found = check_messages(user.name)
-        # if found:
-        #     sock.send("GOTMSG~%s~%s" % (found[0], found[1]))
-        # else :
-        #     sock.send("NOMSG")
 
 
-
-# while True:
-    #     data = sock.recv(1024)
-
-# subprocess.Popen(["python", "shoot\\server.py"])
+#multirheading loop
 while True:
     cli_s, addr = srv_sock.accept()
     t = threading.Thread(target=server, args=(cli_s, addr,))
